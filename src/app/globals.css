@@ -1,1 +1,37 @@
 @import "tailwindcss";
+
+@theme {
+  --color-primary: #9d0208;
+  --color-primary-hover: #6a040f;
+  --color-primary-foreground: #ffffff;
+
+  --color-background: #ffffff;
+  --color-surface: #ffffff;
+  --color-foreground: #111827;
+  --color-muted: #6b7280;
+  --color-border: #f3f4f6;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+}
+
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar hiding for stories */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
