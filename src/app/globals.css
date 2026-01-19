@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
-@theme {
-  --color-primary: #9d0208;
-  --color-primary-hover: #6a040f;
+:root {
+  --color-primary: #111111;
+
+  --color-primary-hover: color-mix(in srgb, var(--color-primary), black 10%);
   --color-primary-foreground: #ffffff;
 
   --color-background: #ffffff;
@@ -33,5 +34,7 @@ body {
 
 .no-scrollbar {
   -ms-overflow-style: none;
+  /* IE and Edge */
   scrollbar-width: none;
+  /* Firefox */
 }

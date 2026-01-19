@@ -26,7 +26,7 @@ interface FeedPostProps {
 const getTagStyles = (tag?: string) => {
     switch (tag) {
         case 'ad': return 'bg-amber-50 text-amber-600 border-amber-100';
-        default: return 'bg-red-50 text-red-600 border-red-100';
+        default: return 'bg-[var(--color-primary)]/10 text-[var(--color-primary)] border-[var(--color-primary)]/20';
     }
 };
 
@@ -99,7 +99,7 @@ export const FeedPost = ({ author, content }: FeedPostProps) => {
                         <div className="flex items-center gap-1">
                             <h4 className="font-bold text-sm text-gray-900 leading-none">{author.name}</h4>
                             {author.verified && (
-                                <BadgeCheck className="h-[14px] w-[14px] text-red-500 fill-red-50" />
+                                <BadgeCheck className="h-[14px] w-[14px] text-[var(--color-primary)] fill-[var(--color-primary)]/10" />
                             )}
                         </div>
                         <p className="text-xs text-gray-500 font-medium mt-0.5">
@@ -114,15 +114,13 @@ export const FeedPost = ({ author, content }: FeedPostProps) => {
                             {content.tag}
                         </span>
                     )}
-                    <button className="text-gray-400 hover:text-gray-600">
-                        <MoreHorizontal className="h-5 w-5" />
-                    </button>
+
                 </div>
             </div>
 
-            <p className="text-[15px] text-gray-800 leading-relaxed font-normal">
+            <p className="text-[14px] text-gray-800 leading-relaxed font-normal">
                 {content.text.split(' ').map((word, i) =>
-                    word.startsWith('#') ? <span key={i} className="text-[#B91C1C] font-semibold">{word} </span> : word + ' '
+                    word.startsWith('#') ? <span key={i} className="text-[var(--color-primary)] font-semibold">{word} </span> : word + ' '
                 )}
             </p>
 
@@ -130,23 +128,18 @@ export const FeedPost = ({ author, content }: FeedPostProps) => {
             {renderImageGrid()}
 
             {/* Actions */}
-            <div className="flex items-center justify-between mt-2">
+            <div className="flex items-center justify-between mt-0.5">
                 <div className="flex items-center gap-1">
                     {/* Like */}
-                    <button className="flex items-center gap-1.5 group p-1.5 -ml-1.5 rounded-full hover:bg-red-50/60 transition-all active:scale-95">
-                        <Heart className="h-[20px] w-[20px] text-gray-500 stroke-[1.5] group-hover:text-red-500 group-hover:fill-red-500 transition-colors" />
-                        <span className="text-[13px] font-semibold text-gray-500 group-hover:text-red-600 tabular-nums">{content.likes}</span>
+                    <button className="flex items-center gap-1.5 group p-1.5 -ml-1.5 rounded-full hover:bg-[var(--color-primary)]/10 transition-all active:scale-95">
+                        <Heart className="h-[20px] w-[20px] text-gray-500 stroke-[1.5] group-hover:text-[var(--color-primary)] group-hover:fill-[var(--color-primary)] transition-colors" />
+                        <span className="text-[13px] font-semibold text-gray-500 group-hover:text-[var(--color-primary)] tabular-nums">{content.likes}</span>
                     </button>
 
                     {/* Comment */}
                     <button className="flex items-center gap-1.5 group p-1.5 rounded-full hover:bg-blue-50/60 transition-all active:scale-95">
                         <MessageCircle className="h-[20px] w-[20px] text-gray-500 stroke-[1.5] group-hover:text-blue-500 transition-colors" />
                         <span className="text-[13px] font-semibold text-gray-500 group-hover:text-blue-600 tabular-nums">{content.comments}</span>
-                    </button>
-
-                    {/* Share */}
-                    <button className="flex items-center gap-1.5 group p-1.5 rounded-full hover:bg-green-50/60 transition-all active:scale-95">
-                        <Send className="h-[20px] w-[20px] text-gray-500 stroke-[1.5] group-hover:text-green-600 -rotate-12 translate-y-0.5 transition-colors" />
                     </button>
 
                     {/* Views */}
@@ -156,10 +149,17 @@ export const FeedPost = ({ author, content }: FeedPostProps) => {
                     </button>
                 </div>
 
-                {/* Bookmark */}
-                <button className="group p-1.5 -mr-1.5 rounded-full hover:bg-gray-100/60 transition-all active:scale-95">
-                    <Bookmark className="h-[20px] w-[20px] text-gray-500 stroke-[1.5] group-hover:text-gray-900 transition-colors" />
-                </button>
+                <div className="flex items-center gap-1">
+                    {/* Share */}
+                    <button className="flex items-center gap-1.5 group p-1.5 rounded-full hover:bg-green-50/60 transition-all active:scale-95">
+                        <Send className="h-[20px] w-[20px] text-gray-500 stroke-[1.5] group-hover:text-green-600 -rotate-12 translate-y-0.5 transition-colors" />
+                    </button>
+
+                    {/* Bookmark */}
+                    <button className="group p-1.5 -mr-1.5 rounded-full hover:bg-gray-100/60 transition-all active:scale-95">
+                        <Bookmark className="h-[20px] w-[20px] text-gray-500 stroke-[1.5] group-hover:text-gray-900 transition-colors" />
+                    </button>
+                </div>
             </div>
 
             {/* Comment Input */}

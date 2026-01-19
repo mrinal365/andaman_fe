@@ -7,12 +7,12 @@ export default function AuthLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="min-h-screen bg-white flex justify-center w-full">
+        <div className="h-screen bg-white flex justify-center w-full overflow-hidden">
             <MobileTopNav />
 
-            <div className="flex w-full max-w-[1280px] gap-8 px-0 lg:px-6 pt-0 lg:pt-0 pb-0 lg:pb-0">
+            <div className="flex w-full max-w-[1440px] gap-0 lg:gap-4 px-0 lg:px-4 h-full border-x border-gray-100">
                 {/* Left Navigation (Common) */}
-                <div className="hidden lg:block w-[280px] pr-8 shrink-0">
+                <div className="hidden lg:block w-[260px] shrink-0 h-full">
                     <Sidebar />
                 </div>
 

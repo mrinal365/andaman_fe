@@ -35,7 +35,7 @@ export const Sidebar = () => {
         <aside className="sticky top-0 h-screen w-[260px] flex flex-col gap-6 overflow-y-auto no-scrollbar py-6">
             {/* Brand */}
             <div className="flex items-center gap-3 px-4 mb-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-50 text-[var(--color-primary)]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
                     <Waves className="h-6 w-6 fill-current" />
                 </div>
                 <span className="text-xl font-bold tracking-tight text-gray-900">Andaman</span>
@@ -47,7 +47,7 @@ export const Sidebar = () => {
                     const isActive = pathname === item.route;
                     const baseClasses = "inline-flex items-center justify-start gap-4 px-6 text-[15px] font-semibold tracking-normal rounded-xl transition-colors focus-visible:outline-none w-full h-[46px]";
                     const variantClasses = isActive
-                        ? 'bg-[var(--color-primary)] text-white shadow-[0_4px_14px_-2px_rgba(157,2,8,0.25)] hover:bg-[var(--color-primary-hover)]'
+                        ? 'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)]'
                         : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50';
 
                     return (
@@ -64,7 +64,7 @@ export const Sidebar = () => {
             </nav>
 
             {/* New Post Button */}
-            <Button variant="primary" size="lg" className="mt-auto w-full shadow-[0_4px_14px_-2px_rgba(157,2,8,0.4)] gap-2 rounded-xl h-[44px] shrink-0">
+            <Button variant="primary" size="lg" className="mt-auto w-full gap-2 rounded-xl h-[44px] shrink-0">
                 <Plus className="h-5 w-5 stroke-[3]" />
                 <span className="text-[14px] font-bold tracking-wide">New Post</span>
             </Button>

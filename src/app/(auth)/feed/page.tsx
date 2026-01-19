@@ -128,10 +128,10 @@ export default function FeedPage() {
     return (
         <>
             {/* Main Feed */}
-            <main className="flex-1 flex flex-col gap-4 md:gap-6 max-w-[640px] mx-auto w-full pt-14 md:pt-0 pb-20 md:pb-10 min-h-screen px-3 md:px-0">
+            <main className="flex-1 flex flex-col gap-4 max-w-[740px] mx-auto w-full pt-14 md:pt-4 pb-20 md:pb-0 h-full overflow-y-auto no-scrollbar px-3 md:px-0">
                 <StoryReel />
 
-                <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-4 pb-10">
                     {POSTS.map((post, i) => (
                         <FeedPost key={i} {...post} />
                     ))}
@@ -139,7 +139,7 @@ export default function FeedPage() {
             </main>
 
             {/* Right Widgets */}
-            <div className="hidden xl:block">
+            <div className="hidden xl:block w-[380px] shrink-0 h-full">
                 <RightSidebar />
             </div>
         </>

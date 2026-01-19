@@ -1,8 +1,13 @@
+'use client'
+import { useState } from 'react';
 import { Avatar } from '@/components/common/Avatar';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
-import { ChevronDown, Video, Clock, Layout, Coffee, Leaf } from 'lucide-react';
+import { ChevronDown, Video, Clock, Layout, Coffee, Leaf, Users, Settings } from 'lucide-react';
+import { cn } from '@/utils/cn';
 import Image from 'next/image';
+
+// ... (existing constants)
 
 const DISCOVERY_ITEMS = [
     {
@@ -71,28 +76,77 @@ const COMMUNITIES = [
 ];
 
 export const RightSidebar = () => {
+    const [isProfileExpanded, setIsProfileExpanded] = useState(false);
     return (
-        <aside className="sticky top-0 h-screen w-[320px] flex flex-col gap-5 overflow-y-auto no-scrollbar pt-6 pb-10">
+        <aside className="h-full w-full flex flex-col gap-4 overflow-y-auto no-scrollbar pt-6 pb-4">
             {/* Profile Snippet */}
-            <Card className="flex items-center gap-3 rounded-xl py-2.5 px-4 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 bg-white" padding="none">
-                <Avatar src="https://i.pravatar.cc/150?u=jane" size="md" />
-                <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-[14px] text-gray-900 leading-tight">Jane Doe</h4>
-                    <p className="text-[12px] text-gray-400 font-medium">@janedoe</p>
+            {/* Profile Snippet - Expandable */}
+            <Card
+                className="group relative flex flex-col rounded-xl shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 bg-white transition-all overflow-hidden cursor-pointer active:scale-[0.99] shrink-0"
+                padding="none"
+                onClick={() => setIsProfileExpanded(!isProfileExpanded)}
+            >
+                {/* Header Row */}
+                <div className="flex items-center gap-3 py-2.5 px-4 w-full">
+                    <Avatar src="https://i.pravatar.cc/150?u=jane" size="md" />
+                    <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-[14px] text-gray-900 leading-tight">Jane Doe</h4>
+                        <p className="text-[12px] text-gray-400 font-medium">@janedoe</p>
+                    </div>
+                    <ChevronDown
+                        className={cn(
+                            "h-5 w-5 text-gray-400 stroke-[1.5] transition-transform duration-300",
+                            isProfileExpanded ? "rotate-180 text-[var(--color-primary)]" : ""
+                        )}
+                    />
                 </div>
-                <ChevronDown className="h-5 w-5 text-gray-400 stroke-[1.5]" />
+
+                {/* Expanded Content */}
+                <div className={cn(
+                    "grid transition-[grid-template-rows] duration-300 ease-in-out",
+                    isProfileExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                )}>
+                    <div className="overflow-hidden">
+                        <div className="px-4 pb-4 pt-1 flex flex-col gap-3 border-t border-gray-50">
+                            {/* Tags */}
+                            <div className="flex flex-wrap gap-1.5 pt-3">
+                                {['Traveler', 'Service Owner', 'Guide'].map((tag) => (
+                                    <span key={tag} className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-gray-100 text-gray-900 border-gray-200">
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+
+                            {/* Stats */}
+                            <div className="flex items-center justify-between text-center">
+                                <div>
+                                    <div className="text-[15px] font-bold text-gray-900">128</div>
+                                    <div className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Posts</div>
+                                </div>
+                                <div>
+                                    <div className="text-[15px] font-bold text-gray-900">1.2k</div>
+                                    <div className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Followers</div>
+                                </div>
+                                <div>
+                                    <div className="text-[15px] font-bold text-gray-900">450</div>
+                                    <div className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Following</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </Card>
 
             {/* Discovery -> Trending Communities */}
             <Card className="p-5 bg-white">
                 <div className="flex items-center justify-between mb-5">
                     <h3 className="font-bold text-gray-500 text-[11px] tracking-widest uppercase">Trending News</h3>
-                    <button className="text-[10px] font-bold text-[#B91C1C] hover:underline tracking-wide uppercase">VIEW ALL</button>
+                    <button className="text-[10px] font-bold text-[var(--color-primary)] hover:underline tracking-wide uppercase">VIEW ALL</button>
                 </div>
                 <div className="flex flex-col gap-4">
                     {TRENDING_NEWS.map((item, i) => (
                         <div key={i} className="flex flex-col gap-1 cursor-pointer group">
-                            <h4 className="font-bold text-[13px] text-gray-900 leading-snug group-hover:text-[#B91C1C] transition-colors line-clamp-2">{item.title}</h4>
+                            <h4 className="font-bold text-[13px] text-gray-900 leading-snug group-hover:text-[var(--color-primary)] transition-colors line-clamp-2">{item.title}</h4>
                             <p className="text-[10px] text-gray-400 font-medium flex items-center gap-1.5">
                                 <span>{item.readers}</span>
                                 <span className="h-0.5 w-0.5 rounded-full bg-gray-300"></span>
@@ -107,11 +161,11 @@ export const RightSidebar = () => {
             <Card className="p-5 bg-white">
                 <div className="flex items-center justify-between mb-5">
                     <h3 className="font-bold text-gray-500 text-[11px] tracking-widest">UPCOMING EVENTS</h3>
-                    <button className="text-[10px] font-bold text-[#B91C1C] hover:underline tracking-wide">CALENDAR</button>
+                    <button className="text-[10px] font-bold text-[var(--color-primary)] hover:underline tracking-wide">CALENDAR</button>
                 </div>
                 <div className="flex flex-col gap-4">
                     <div className="flex gap-3">
-                        <div className="flex flex-col items-center justify-center h-[50px] w-[50px] bg-[#FEF2F2] rounded-md text-[#9d0208] shrink-0">
+                        <div className="flex flex-col items-center justify-center h-[50px] w-[50px] bg-[var(--color-primary)]/5 rounded-md text-[var(--color-primary)] shrink-0">
                             <span className="text-[19px] font-bold leading-none mb-0.5">24</span>
                             <span className="text-[9px] font-bold tracking-wide">OCT</span>
                         </div>
@@ -124,7 +178,7 @@ export const RightSidebar = () => {
                         </div>
                     </div>
                     <div className="flex gap-3">
-                        <div className="flex flex-col items-center justify-center h-[50px] w-[50px] bg-[#FEF2F2] rounded-md text-[#9d0208] shrink-0">
+                        <div className="flex flex-col items-center justify-center h-[50px] w-[50px] bg-[var(--color-primary)]/5 rounded-md text-[var(--color-primary)] shrink-0">
                             <span className="text-[19px] font-bold leading-none mb-0.5">02</span>
                             <span className="text-[9px] font-bold tracking-wide">NOV</span>
                         </div>
@@ -148,8 +202,8 @@ export const RightSidebar = () => {
                     {COMMUNITIES.map((c) => (
                         <div key={c.name} className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 rounded-2xl bg-red-50 flex items-center justify-center text-[var(--color-primary)] shrink-0">
-                                    <c.icon className={`h-5 w-5 ${c.name === 'Minimalist Living' ? 'text-slate-600' : 'text-current'}`} />
+                                <div className="h-10 w-10 rounded-2xl bg-[var(--color-primary)]/10 flex items-center justify-center text-[var(--color-primary)] shrink-0">
+                                    <c.icon className="h-5 w-5 text-current" />
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-[14px] text-gray-900">{c.name}</h4>
@@ -163,10 +217,6 @@ export const RightSidebar = () => {
                     ))}
                 </div>
             </Card>
-
-            <div className="text-[10px] text-gray-300 text-center pb-4 font-medium tracking-wide">
-                © 2024 BloodRedFeed Inc.
-            </div>
         </aside>
     );
 };

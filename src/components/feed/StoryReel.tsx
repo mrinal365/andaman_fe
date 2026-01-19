@@ -24,14 +24,28 @@ export const StoryReel = () => {
         if (scrollRef.current) {
             const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
             setCanScrollLeft(scrollLeft > 0);
-            setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10); // 10px buffer
+            // Use Math.abs for robustness against browser differences
+            setCanScrollRight(Math.ceil(scrollLeft + clientWidth) < scrollWidth - 5);
         }
     };
 
     useEffect(() => {
         checkScroll();
+
+        const scrollContainer = scrollRef.current;
+        if (!scrollContainer) return;
+
+        const observer = new ResizeObserver(() => {
+            checkScroll();
+        });
+
+        observer.observe(scrollContainer);
         window.addEventListener('resize', checkScroll);
-        return () => window.removeEventListener('resize', checkScroll);
+
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('resize', checkScroll);
+        };
     }, []);
 
     const scroll = (direction: 'left' | 'right') => {
@@ -88,7 +102,7 @@ export const StoryReel = () => {
 
                     return (
                         <div key={story.id} className="flex flex-col items-center gap-2 cursor-pointer group/story shrink-0">
-                            <div className={`${ringSize} rounded-full border-[2.5px] ${story.seen ? 'border-gray-200' : 'border-[#9d0208]'} flex items-center justify-center p-1`}>
+                            <div className={`${ringSize} rounded-full border-[2.5px] ${story.seen ? 'border-gray-200' : 'border-[var(--color-primary)]'} flex items-center justify-center p-1`}>
                                 <Avatar
                                     src={story.img}
                                     className={`${imageSize} rounded-full`}

@@ -14,7 +14,7 @@ export const MobileTopNav = () => {
                 <div className="flex flex-col">
                     <div className="flex items-center gap-1">
                         <span className="text-sm font-bold text-gray-900 leading-none">Jane Doe</span>
-                        <BadgeCheck className="h-[14px] w-[14px] text-red-500 fill-red-50" />
+                        <BadgeCheck className="h-[14px] w-[14px] text-[var(--color-primary)] fill-[var(--color-primary)]/10" />
                     </div>
                     <span className="text-xs text-gray-500 font-medium">@janedoe</span>
                 </div>
