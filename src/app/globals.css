@@ -38,3 +38,70 @@ body {
   scrollbar-width: none;
   /* Firefox */
 }
+
+/* Animations for Login/Signup Background */
+@keyframes wave {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-wave-slow {
+  animation: wave 25s linear infinite;
+}
+
+.animate-wave-medium {
+  animation: wave 20s linear infinite;
+}
+
+.animate-wave-fast {
+  animation: wave 15s linear infinite;
+}
+
+@keyframes tree-sway {
+
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+
+  50% {
+    transform: rotate(2deg);
+  }
+}
+
+.animate-tree-sway {
+  animation: tree-sway 8s ease-in-out infinite;
+}
+
+@keyframes birds-fly {
+  from {
+    transform: translateX(120%);
+  }
+
+  to {
+    transform: translateX(-120%);
+  }
+}
+
+.animate-birds-fly {
+  animation: birds-fly 30s linear infinite;
+}
+
+@keyframes airplane-fly {
+  from {
+    transform: translateX(-120%);
+  }
+
+  to {
+    transform: translateX(120%);
+  }
+}
+
+.animate-airplane-fly {
+  animation: airplane-fly 25s linear infinite;
+}
