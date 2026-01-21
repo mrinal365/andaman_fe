@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { config } from '@/config';
 
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1', // Default or Env variable
+    baseURL: config.apiUrl, // Use config-driven URL
     headers: {
         'Content-Type': 'application/json',
     },
