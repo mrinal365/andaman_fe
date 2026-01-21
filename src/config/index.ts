@@ -1,23 +1,52 @@
-type AppEnv = 'local' | 'stage' | 'prod';
+export type AppEnv = 'local' | 'stage' | 'prod';
 
 interface Config {
-    apiUrl: string;
     env: AppEnv;
+    api: {
+        baseUrl: string;
+        timeout: number;
+    };
+    app: {
+        name: string;
+        version: string;
+    };
 }
 
+const commonDefaults = {
+    api: {
+        timeout: 10000,
+    },
+    app: {
+        name: 'Andaman',
+        version: '1.0.0',
+    },
+};
+
 const local: Config = {
-    apiUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1',
     env: 'local',
+    ...commonDefaults,
+    api: {
+        ...commonDefaults.api,
+        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1',
+    },
 };
 
 const stage: Config = {
-    apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://stage-api.example.com/api/v1',
     env: 'stage',
+    ...commonDefaults,
+    api: {
+        ...commonDefaults.api,
+        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://stage-api.example.com/api/v1',
+    },
 };
 
 const prod: Config = {
-    apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api.example.com/api/v1',
     env: 'prod',
+    ...commonDefaults,
+    api: {
+        ...commonDefaults.api,
+        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api.example.com/api/v1',
+    },
 };
 
 const configs: Record<AppEnv, Config> = {
