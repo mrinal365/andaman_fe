@@ -1,11 +1,13 @@
 'use client'
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Avatar } from '@/components/common/Avatar';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
-import { ChevronDown, Video, Clock, Layout, Coffee, Leaf, Users, Settings } from 'lucide-react';
+import { ChevronDown, Video, Clock, Layout, Coffee, Leaf, Users, Settings, LogOut } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import Image from 'next/image';
+import { deleteCookie } from '@/utils';
 
 // ... (existing constants)
 
@@ -77,6 +79,14 @@ const COMMUNITIES = [
 
 export const RightSidebar = () => {
     const [isProfileExpanded, setIsProfileExpanded] = useState(false);
+    const router = useRouter();
+
+    const handleLogout = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent card expansion
+        deleteCookie('token');
+        router.push('/login');
+    };
+
     return (
         <aside className="h-full w-full flex flex-col gap-4 overflow-y-auto no-scrollbar pt-6 pb-4">
             {/* Profile Snippet */}
@@ -93,6 +103,13 @@ export const RightSidebar = () => {
                         <h4 className="font-bold text-[14px] text-gray-900 leading-tight">Jane Doe</h4>
                         <p className="text-[12px] text-gray-400 font-medium">@janedoe</p>
                     </div>
+                    <button
+                        onClick={handleLogout}
+                        className="p-1.5 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors mr-1"
+                        title="Logout"
+                    >
+                        <LogOut className="h-4 w-4 stroke-[2]" />
+                    </button>
                     <ChevronDown
                         className={cn(
                             "h-5 w-5 text-gray-400 stroke-[1.5] transition-transform duration-300",

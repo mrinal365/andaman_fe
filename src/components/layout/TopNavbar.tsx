@@ -1,13 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Bell, Search, Waves, Users, MessageSquare, ChevronDown } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Bell, Search, Waves, Users, MessageSquare, ChevronDown, LogOut } from 'lucide-react';
 import { Avatar } from '@/components/common/Avatar';
 import { cn } from '@/utils/cn';
+import { deleteCookie } from '@/utils';
 
 export const TopNavbar = () => {
     const pathname = usePathname();
+    const router = useRouter();
+
+    const handleLogout = () => {
+        deleteCookie('token');
+        router.push('/login');
+    };
 
     const NAV_ITEMS = [
         { icon: Users, route: '/communities' },
@@ -60,6 +67,13 @@ export const TopNavbar = () => {
                 <div className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden border border-gray-100 cursor-pointer">
                     <Avatar src="https://i.pravatar.cc/150?u=me" size="sm" />
                 </div>
+                <button
+                    onClick={handleLogout}
+                    className="h-8 w-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors"
+                    title="Logout"
+                >
+                    <LogOut className="h-4 w-4" />
+                </button>
             </div>
         </header>
     );

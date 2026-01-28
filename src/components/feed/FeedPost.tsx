@@ -1,7 +1,9 @@
+'use client'
 import { Avatar } from '@/components/common/Avatar';
 import { Card } from '@/components/common/Card';
 import { SafeImage } from '@/components/common/SafeImage';
 import { MoreHorizontal, Heart, MessageCircle, Send, Bookmark, BadgeCheck, Eye } from 'lucide-react';
+import { VideoPlayer } from './VideoPlayer';
 
 interface FeedPostProps {
     author: {
@@ -15,6 +17,7 @@ interface FeedPostProps {
         text: string;
         image?: string;
         images?: string[];
+        video?: string; // Added video support
         tag?: 'post' | 'guide' | 'news' | 'ad' | 'update';
         likes: string;
         comments: string;
@@ -34,6 +37,9 @@ export const FeedPost = ({ author, content }: FeedPostProps) => {
     const postImages = content.images || (content.image ? [content.image] : []);
 
     const renderImageGrid = () => {
+        // If it's a video post, don't render images
+        if (content.video) return null;
+
         if (postImages.length === 0) return null;
 
         if (postImages.length === 1) {
@@ -124,8 +130,12 @@ export const FeedPost = ({ author, content }: FeedPostProps) => {
                 )}
             </p>
 
-            {/* Images */}
-            {renderImageGrid()}
+            {/* Content: Video OR Images */}
+            {content.video ? (
+                <VideoPlayer url={content.video} />
+            ) : (
+                renderImageGrid()
+            )}
 
             {/* Actions */}
             <div className="flex items-center justify-between mt-0.5">
