@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { config } from '@/config';
+import { toast, ToastContainer } from 'react-toastify';
 
 const api = axios.create({
     baseURL: config.api.baseUrl,
@@ -31,7 +32,7 @@ api.interceptors.response.use(
         // Handle global errors (e.g., 401 Unauthorized)
         if (error.response && error.response.status === 401) {
             // Handle unauthorized access (e.g., redirect to login)
-            console.warn('Unauthorized access');
+            toast.error('Wrong Credentials');
         }
         return Promise.reject(error);
     }

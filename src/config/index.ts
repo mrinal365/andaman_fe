@@ -27,7 +27,7 @@ const local: Config = {
     ...commonDefaults,
     api: {
         ...commonDefaults.api,
-        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1',
+        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1',
     },
 };
 

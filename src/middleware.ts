@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { config } from '@/config';
+import { config as appConfig } from '@/config';
 
 // Define public paths that don't require authentication
-const publicPaths = ['/login', '/signup', '/'];
+const publicPaths = ['/login', '/signup'];
 
 export async function middleware(request: NextRequest) {
+    console.log("middleware wexcectired")
     const { pathname } = request.nextUrl;
 
     // Check if the path is public
@@ -18,12 +19,12 @@ export async function middleware(request: NextRequest) {
 
     if (!token) {
         // No token found, redirect to login
-        return NextResponse.redirect(new URL('/login', request.url));
+        return NextResponse.redirect(new URL('/login?error=session_expired', request.url));
     }
 
     try {
         // Validate token with API
-        const response = await fetch(`${config.api.baseUrl}/auth/me`, {
+        const response = await fetch(`${appConfig.api.baseUrl}/auth/me`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
@@ -38,7 +39,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.next();
     } catch (error) {
         // API Check failed, redirect to login
-        const response = NextResponse.redirect(new URL('/login', request.url));
+        const response = NextResponse.redirect(new URL('/login?error=session_expired', request.url));
         // Optional: Clear invalid cookie
         response.cookies.delete('token');
         return response;
@@ -46,7 +47,7 @@ export async function middleware(request: NextRequest) {
 }
 
 // Matcher configuration
-export const configMatcher = {
+export const config = {
     matcher: [
         /*
          * Match all request paths except for the ones starting with:

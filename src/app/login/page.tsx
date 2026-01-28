@@ -1,6 +1,8 @@
 'use client'
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // Added useEffect
+import { useRouter, useSearchParams } from 'next/navigation'; // Added useSearchParams
+import { toast } from 'react-toastify'; // Added toast
 
 import { AuthBackground } from '@/components/login/AuthBackground';
 import { Input } from '@/components/common/Input';
@@ -8,8 +10,12 @@ import { Button } from '@/components/common/Button';
 
 import { GoogleIcon } from '@/components/icons';
 import { isFormDataValid } from './utils';
+import { login } from '@/services/authService';
+import { setCookie } from '@/utils';
 
 export default function LoginPage() {
+    const router = useRouter()
+    const searchParams = useSearchParams(); // Get search params
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -20,15 +26,37 @@ export default function LoginPage() {
         password: ''
     });
 
+    const [isLoggingLoading, setIsLoggingLoading] = useState(false);
+
+    // Check for error param on mount
+    // useEffect(() => {
+    //     const error = searchParams.get('error');
+    //     if (error === 'session_expired') {
+    //         toast.error('Session expired. Please login again.');
+    //     }
+    // }, [searchParams]);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
-        if (!isFormDataValid(formData)) {
-            return
-        }
+        // if (!isFormDataValid(formData)) {
+        //     return
+        // }
+        setIsLoggingLoading(true)
+        login(formData).then((res) => {
+            toast.success("Login Successful");
+            setCookie("token", res?.token);
+            router.push("/feed");
+            console.log("res", res);
+        }).catch((err) => {
+            // toast.error("Login Failed");
+            console.log("err", err);
+        }).finally(() => {
+            setIsLoggingLoading(false)
+        })
         e.preventDefault();
         console.log('Login Data:', formData);
         // Add auth logic here
@@ -85,7 +113,7 @@ export default function LoginPage() {
                             />
                         </div>
 
-                        <Button type="submit" variant="primary">
+                        <Button loading={isLoggingLoading} type="submit" variant="primary">
                             Sign In
                         </Button>
 
