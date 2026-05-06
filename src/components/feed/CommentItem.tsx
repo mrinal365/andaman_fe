@@ -6,6 +6,7 @@ import { Avatar } from '@/components/common/Avatar';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { RootState } from '@/store/store';
 import { toggleCommentLikeOptimistic, addCommentOptimistic, replaceComment, deleteComment } from '@/store/features/commentSlice';
+import { increaseCommentCount } from '@/store/features/postSlice';
 import { likeUnlikeComment, replyToComment } from '@/services/feedService';
 import { cn } from '@/utils/cn';
 import { toast } from 'react-toastify';
@@ -88,6 +89,7 @@ export const CommentItem = ({ commentId, level = 0 }: CommentItemProps) => {
         };
 
         dispatch(addCommentOptimistic({ comment: optimisticReply }));
+        dispatch(increaseCommentCount(comment.postId));
         setReplyText('');
         setIsReplying(false);
         setIsSubmittingReply(true);

@@ -38,7 +38,7 @@ export const PostDetailModal = ({ post: postProp, isOpen, onClose, scrollToComme
     const user = useAppSelector((state) => state.user.user);
 
     // Read post from Redux so interactions reflect in both modal and feed card
-    const postId = postProp?.id;
+    const postId = postProp?.id || postProp?._id;
     const post = useAppSelector((state: RootState) => state.posts.byId[postId]) || postProp;
 
     const comments = useAppSelector((state: RootState) => state.comments.byPost[post?._id] || []);
