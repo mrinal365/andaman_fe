@@ -21,7 +21,7 @@ import {
 
 import { NotificationItem } from '@/components/notifications/NotificationItem';
 import { cn } from '@/utils/cn';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, Bell } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 const FILTERS = ['All', 'Likes', 'Comments', 'Follows', 'Messages'];
@@ -175,14 +175,14 @@ export default function NotificationsPage() {
 
 
     return (
-        <div className="flex-1 h-full overflow-y-auto bg-white no-scrollbar">
+        <div className="flex-1 h-screen overflow-y-auto bg-white scroll-smooth no-scrollbar flex flex-col">
             {/* Header Section (Sticky) */}
-            <div className="sticky top-0 shrink-0 border-b border-gray-100 bg-white/80 backdrop-blur-md z-30">
+            <div className="sticky top-0 shrink-0 border-b border-gray-100 bg-white/90 backdrop-blur-xl z-30">
                 <div className="px-4 py-2 flex items-center justify-between min-h-[53px]">
                     <div className="flex items-center gap-6">
                         <button
                             onClick={() => router.back()}
-                            className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+                            className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-gray-100 transition-all active:scale-95"
                         >
                             <ArrowLeft className="h-5 w-5 text-gray-900" />
                         </button>
@@ -190,12 +190,12 @@ export default function NotificationsPage() {
                             <div className="flex items-center gap-2">
                                 <h1 className="text-[19px] font-black text-gray-900 tracking-tight leading-tight">Notifications</h1>
                                 {unreadCount > 0 && (
-                                    <span className="px-2 py-0.5 rounded-full bg-red-500 text-white text-[11px] font-bold">
+                                    <span className="px-2 py-0.5 rounded-full bg-red-500 text-white text-[11px] font-bold animate-pulse">
                                         {unreadCount > 50 ? '50+' : unreadCount}
                                     </span>
                                 )}
                             </div>
-                            <p className="text-[12px] text-gray-500 font-bold uppercase tracking-widest leading-tight">Activity</p>
+                            <p className="text-[12px] text-gray-500 font-bold uppercase tracking-widest leading-tight">Activity History</p>
                         </div>
                     </div>
                     {unreadCount > 0 && (
@@ -203,7 +203,7 @@ export default function NotificationsPage() {
                             onClick={handleMarkAllRead}
                             className="text-[10px] font-bold text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors uppercase tracking-wider px-2"
                         >
-                            Mark all as read
+                            Mark all read
                         </button>
                     )}
                 </div>
@@ -215,10 +215,10 @@ export default function NotificationsPage() {
                             key={f}
                             onClick={() => setFilter(f)}
                             className={cn(
-                                "px-3.5 py-1 rounded-full text-[12px] font-medium transition-all whitespace-nowrap",
+                                "px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all whitespace-nowrap shadow-sm border",
                                 filter === f
-                                    ? "bg-[var(--color-primary)] text-white"
-                                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                                    ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]"
+                                    : "text-gray-500 hover:text-gray-900 bg-white border-gray-100"
                             )}
                         >
                             {f}
@@ -228,42 +228,56 @@ export default function NotificationsPage() {
             </div>
 
             {/* List */}
-            <div className="w-full">
-                    {isLoading ? (
-                        <div className="flex items-center justify-center h-40">
-                            <Loader2 className="w-6 h-6 animate-spin text-gray-300" />
+            <div className="flex-1 flex flex-col w-full">
+                {isLoading ? (
+                    <div className="flex-1 flex flex-col items-center justify-center py-20">
+                        <Loader2 className="w-8 h-8 animate-spin text-[var(--color-primary)] opacity-40" />
+                        <p className="mt-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Loading Inbox</p>
+                    </div>
+                ) : filtered.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center py-40 px-10 text-center">
+                        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
+                            <Bell className="w-10 h-10 text-gray-200" />
                         </div>
-                    ) : filtered.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 text-center opacity-50">
-                            <p className="text-sm font-medium text-gray-400">No notifications yet</p>
-                        </div>
-                    ) : (
-                        <div className="flex flex-col" ref={containerRef}>
-                            {filtered.map((notification) => (
-                                <NotificationItem
-                                    key={notification._id}
-                                    notification={notification}
-                                    onMarkRead={handleMarkRead}
-                                    onDelete={handleDelete}
-                                />
-                            ))}
-                        </div>
+                        <h2 className="text-lg font-bold text-gray-900 mb-1">Your inbox is empty</h2>
+                        <p className="text-sm font-medium text-gray-400">Notifications about your activity and network will appear here.</p>
+                    </div>
+                ) : (
+                    <div className="flex flex-col w-full" ref={containerRef}>
+                        {filtered.map((notification) => (
+                            <NotificationItem
+                                key={notification._id}
+                                notification={notification}
+                                onMarkRead={handleMarkRead}
+                                onDelete={handleDelete}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {/* Infinite Scroll Trigger & Spinner */}
+                <div 
+                    ref={loadMoreRef} 
+                    className={cn(
+                        "w-full py-10 flex flex-col items-center justify-center transition-opacity duration-300",
+                        !hasMore && filtered.length > 0 ? "opacity-100" : "opacity-100"
                     )}
-
-
-                    {/* Load More Trigger */}
-                    {!isLoading && hasMore && (
-                        <div ref={loadMoreRef} className="p-6 flex justify-center">
-                            <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
-                        </div>
+                >
+                    {isLoadingMore && (
+                        <>
+                            <Loader2 className="w-6 h-6 animate-spin text-[var(--color-primary)] mb-2" />
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fetching more...</p>
+                        </>
                     )}
-
+                    
                     {!isLoading && !hasMore && filtered.length > 0 && (
-                        <div className="p-8 text-center">
-                            <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">End of notifications</p>
+                        <div className="flex flex-col items-center gap-4">
+                            <div className="h-px w-12 bg-gray-100" />
+                            <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em]">End of activity</p>
                         </div>
                     )}
                 </div>
+            </div>
         </div>
     );
 }

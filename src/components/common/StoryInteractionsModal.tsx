@@ -6,6 +6,8 @@ import { Avatar } from './Avatar';
 import { getStoryLikes, getStoryViews } from '@/services/storyService';
 import { Loader2, Heart, Eye, UserPlus, BadgeCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useAppSelector } from '@/store/hooks';
+import { RootState } from '@/store/store';
 
 interface StoryInteractionsModalProps {
     storyId: string;
@@ -18,6 +20,7 @@ export const StoryInteractionsModal = ({ storyId, type, isOpen, onClose }: Story
     const [users, setUsers] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
+    const currentUser = useAppSelector((state: RootState) => state.user.user);
 
     useEffect(() => {
         if (isOpen && storyId) {
@@ -65,34 +68,41 @@ export const StoryInteractionsModal = ({ storyId, type, isOpen, onClose }: Story
                     </div>
                 ) : (
                     <div className="divide-y divide-gray-50">
-                        {users.map((u) => (
-                            <div 
-                                key={u._id} 
-                                className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
-                            >
+                        {users.map((u) => {
+                            const isMe = currentUser && (currentUser.id === u._id || currentUser._id === u._id);
+                            
+                            return (
                                 <div 
-                                    className="flex items-center gap-3 cursor-pointer group"
-                                    onClick={() => handleUserClick(u.handle)}
+                                    key={u._id} 
+                                    className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
                                 >
-                                    <Avatar src={u.avatar} name={u.name} size="md" />
-                                    <div className="min-w-0">
-                                        <div className="flex items-center gap-1">
-                                            <h4 className="font-bold text-[14px] text-gray-900 truncate group-hover:text-[var(--color-primary)] transition-colors">
-                                                {u.name}
-                                            </h4>
-                                            {u.verified && (
-                                                <BadgeCheck className="h-3.5 w-3.5 text-green-700 fill-green-700/30" />
-                                            )}
+                                    <div 
+                                        className="flex items-center gap-3 cursor-pointer group"
+                                        onClick={() => handleUserClick(u.handle)}
+                                    >
+                                        <Avatar src={u.avatar} name={u.name} size="md" />
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-1">
+                                                <h4 className="font-bold text-[14px] text-gray-900 truncate group-hover:text-[var(--color-primary)] transition-colors">
+                                                    {u.name}
+                                                </h4>
+                                                {u.verified && (
+                                                    <BadgeCheck className="h-3.5 w-3.5 text-green-700 fill-green-700/30" />
+                                                )}
+                                            </div>
+                                            <p className="text-xs text-gray-500 font-medium truncate">@{u.handle}</p>
                                         </div>
-                                        <p className="text-xs text-gray-500 font-medium truncate">@{u.handle}</p>
                                     </div>
+                                    
+                                    {!isMe && (
+                                        <button className="bg-gray-900 text-white text-xs font-bold px-4 py-2 rounded-full hover:bg-gray-800 transition-colors flex items-center gap-1.5">
+                                            <UserPlus className="w-3.5 h-3.5" />
+                                            Follow
+                                        </button>
+                                    )}
                                 </div>
-                                <button className="bg-gray-900 text-white text-xs font-bold px-4 py-2 rounded-full hover:bg-gray-800 transition-colors flex items-center gap-1.5">
-                                    <UserPlus className="w-3.5 h-3.5" />
-                                    Follow
-                                </button>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </div>

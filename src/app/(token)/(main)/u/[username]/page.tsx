@@ -641,7 +641,7 @@ export default function ProfilePage() {
                                                 <p className="text-sm text-gray-500 font-bold">@{u.handle}</p>
                                             </div>
                                         </div>
-                                        {currentUser?.id !== u.id && (
+                                        {currentUser && currentUser.id !== u.id && currentUser._id !== u._id && currentUser.id !== u._id && currentUser._id !== u.id && (
                                             <button
                                                 className={cn(
                                                     "px-4 py-1.5 rounded-lg font-bold text-sm transition-all",
