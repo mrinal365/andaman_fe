@@ -25,6 +25,8 @@ import { SafeImage } from '@/components/common/SafeImage';
 import { CommentItem } from './CommentItem';
 import { LikesModal } from '@/components/common/LikesModal';
 import { searchUsers } from '@/services/userService';
+import { renderTextWithTags } from '@/utils/textParser';
+import Link from 'next/link';
 
 interface PostDetailModalProps {
     post: any;
@@ -238,6 +240,26 @@ export const PostDetailModal = ({ post: postProp, isOpen, onClose, scrollToComme
                     </div>
                 </div>
 
+                {/* Tagged Users Sliding List */}
+                {post?.taggedUsers && post.taggedUsers.length > 0 && (
+                    <div className="px-4 md:px-6 py-2 bg-gray-50/50 border-b border-gray-100 shrink-0">
+                        <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-1">
+                            <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest shrink-0">With</span>
+                            {post.taggedUsers.map((tu: any) => (
+                                <Link 
+                                    key={tu._id}
+                                    href={`/u/${tu.handle}`}
+                                    className="flex items-center gap-2 shrink-0 bg-white border border-gray-200 pl-1 pr-3 py-1 rounded-full hover:border-[var(--color-primary)] hover:shadow-sm transition-all group/tag"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <Avatar src={tu.avatar} name={tu.name} size="xs" />
+                                    <span className="text-xs font-bold text-gray-700 group-hover/tag:text-[var(--color-primary)] transition-colors">{tu.name}</span>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* Scrollable body */}
                 <div className="flex-1 overflow-y-auto">
                     {/* Post text */}
@@ -245,12 +267,8 @@ export const PostDetailModal = ({ post: postProp, isOpen, onClose, scrollToComme
                         {post?.feed?.title && (
                             <p className="text-[14px] text-gray-800 leading-relaxed font-bold mb-1">{post.feed.title}</p>
                         )}
-                        <p className="text-[14px] text-gray-800 leading-relaxed">
-                            {post?.feed?.previewText?.split(' ')?.map((word: string, i: number) =>
-                                word.startsWith('#')
-                                    ? <span key={i} className="text-[var(--color-primary)] font-semibold">{word} </span>
-                                    : word + ' '
-                            )}
+                        <p className="text-[14px] text-gray-800 leading-relaxed whitespace-pre-wrap">
+                            {renderTextWithTags(post?.feed?.previewText || '')}
                         </p>
                     </div>
 

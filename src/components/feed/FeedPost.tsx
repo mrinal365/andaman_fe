@@ -38,6 +38,7 @@ export const FeedPost = ({ post }: { post: Post }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isTagHovered, setIsTagHovered] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
     const authorId = post.authorId?._id || post.authorId;
@@ -313,18 +314,38 @@ export const FeedPost = ({ post }: { post: Post }) => {
                                 {post?.taggedUsers && post.taggedUsers.length > 0 && (
                                     <span className="text-[13px] text-gray-500 flex items-center gap-1 flex-wrap">
                                         with{' '}
-                                        {post.taggedUsers.map((tu: any, index: number) => (
-                                            <span key={tu._id}>
-                                                <Link 
-                                                    href={`/u/${tu.handle}`} 
-                                                    className="font-bold text-gray-700 hover:text-[var(--color-primary)] transition-colors hover:underline"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                >
-                                                    {tu.name}
-                                                </Link>
-                                                {index < (post.taggedUsers?.length || 0) - 1 ? ', ' : ''}
-                                            </span>
-                                        ))}
+                                        <Link 
+                                            href={`/u/${post.taggedUsers[0].handle}`} 
+                                            className="font-bold text-gray-700 hover:text-[var(--color-primary)] transition-colors hover:underline"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            {post.taggedUsers[0].name}
+                                        </Link>
+                                        {post.taggedUsers.length > 1 && (
+                                            <div 
+                                                className="relative inline-block"
+                                                onMouseEnter={() => setIsTagHovered(true)}
+                                                onMouseLeave={() => setIsTagHovered(false)}
+                                            >
+                                                <span className="font-bold text-gray-500 cursor-help">
+                                                    {` +${post.taggedUsers.length - 1}`}
+                                                </span>
+                                                
+                                                {isTagHovered && (
+                                                    <div className="absolute top-full left-0 mt-2 p-3 bg-white rounded-xl shadow-2xl border border-gray-100 z-[100] min-w-[180px] animate-in fade-in slide-in-from-top-2 duration-200 pointer-events-none">
+                                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tagged Users</p>
+                                                        <div className="flex flex-col gap-2">
+                                                            {post.taggedUsers.map((tu: any) => (
+                                                                <div key={tu._id} className="flex items-center gap-2">
+                                                                    <Avatar src={tu.avatar} name={tu.name} size="xs" />
+                                                                    <span className="text-xs font-bold text-gray-700 truncate">{tu.name}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </span>
                                 )}
                             </div>

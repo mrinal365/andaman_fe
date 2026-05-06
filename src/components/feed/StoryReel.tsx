@@ -2,127 +2,269 @@
 
 import { useRef, useState, useEffect } from 'react';
 import { Avatar } from '@/components/common/Avatar';
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
-
-const STORIES = [
-    { id: 'user', name: 'My Story', img: 'https://i.pravatar.cc/150?u=user1', isUser: true },
-    { id: '1', name: 'Mark', img: 'https://i.pravatar.cc/150?u=mark', seen: false },
-    { id: '2', name: 'Sarah', img: 'https://i.pravatar.cc/150?u=sarah', seen: false },
-    { id: '3', name: 'Alex', img: 'https://i.pravatar.cc/150?u=alex', seen: true },
-    { id: '4', name: 'Minimal', img: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=150&q=80', seen: false },
-    { id: '5', name: 'Julia', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80', seen: false },
-    { id: '6', name: 'David', img: 'https://i.pravatar.cc/150?u=david', seen: true },
-    { id: '7', name: 'Elena', img: 'https://i.pravatar.cc/150?u=elena', seen: false },
-];
+import { Plus, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { useAppSelector } from '@/store/hooks';
+import { getStoryFeed, createStory } from '@/services/storyService';
+import { uploadImage } from '@/services/uploadService';
+import { StoryGroup } from '@/types/story';
+import { StoryViewer } from './StoryViewer';
+import { toast } from 'react-toastify';
+import { cn } from '@/utils/cn';
 
 export const StoryReel = () => {
+    const user = useAppSelector((state) => state.user.user);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    
+    const [groups, setGroups] = useState<StoryGroup[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isUploading, setIsUploading] = useState(false);
+    
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(true);
+    
+    const [viewerState, setViewerState] = useState<{ isOpen: boolean; groupIndex: number }>({
+        isOpen: false,
+        groupIndex: 0
+    });
+    const [viewerSession, setViewerSession] = useState(0);
+
+    const fetchStories = async () => {
+        try {
+            const data = await getStoryFeed();
+            setGroups(data);
+        } catch (err) {
+            console.error('Failed to fetch stories', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchStories();
+    }, []);
 
     const checkScroll = () => {
         if (scrollRef.current) {
             const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
             setCanScrollLeft(scrollLeft > 0);
-            // Use Math.abs for robustness against browser differences
             setCanScrollRight(Math.ceil(scrollLeft + clientWidth) < scrollWidth - 5);
         }
     };
 
     useEffect(() => {
         checkScroll();
-
-        const scrollContainer = scrollRef.current;
-        if (!scrollContainer) return;
-
-        const observer = new ResizeObserver(() => {
-            checkScroll();
-        });
-
-        observer.observe(scrollContainer);
         window.addEventListener('resize', checkScroll);
-
-        return () => {
-            observer.disconnect();
-            window.removeEventListener('resize', checkScroll);
-        };
-    }, []);
+        return () => window.removeEventListener('resize', checkScroll);
+    }, [groups]);
 
     const scroll = (direction: 'left' | 'right') => {
         if (scrollRef.current) {
-            const { current } = scrollRef;
             const scrollAmount = 300;
-            if (direction === 'left') {
-                current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-            } else {
-                current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-            }
+            scrollRef.current.scrollBy({ 
+                left: direction === 'left' ? -scrollAmount : scrollAmount, 
+                behavior: 'smooth' 
+            });
         }
     };
 
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        try {
+            const uploadRes = await uploadImage(file);
+            await createStory(uploadRes.url);
+            toast.success('Story posted!');
+            fetchStories(); // Refresh reel
+        } catch (err: any) {
+            const msg = err.response?.data?.message || err.message || 'Failed to post story';
+            toast.error(msg);
+        } finally {
+            setIsUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
+    const openViewer = (index: number) => {
+        setViewerSession(s => s + 1);
+        setViewerState({ isOpen: true, groupIndex: index });
+    };
+
+    const handleStoryViewed = (storyId: string) => {
+        // Optimistically update local state to reflect seen story
+        setGroups(prev => prev.map(group => {
+            const updatedStories = group.stories.map(s => 
+                s._id === storyId ? { ...s, isSeen: true } : s
+            );
+            const stillHasUnseen = updatedStories.some(s => !s.isSeen);
+            return {
+                ...group,
+                stories: updatedStories,
+                hasUnseen: stillHasUnseen
+            };
+        }));
+    };
+
+    const handleStoryLiked = (storyId: string) => {
+        setGroups(prev => prev.map(group => {
+            const updatedStories = group.stories.map(s => {
+                if (s._id === storyId) {
+                    const willBeLiked = !s.isLiked;
+                    return { 
+                        ...s, 
+                        isLiked: willBeLiked,
+                        stats: {
+                            ...s.stats,
+                            likeCount: s.stats.likeCount + (willBeLiked ? 1 : -1)
+                        }
+                    };
+                }
+                return s;
+            });
+            return { ...group, stories: updatedStories };
+        }));
+    };
+
+    const userGroupIndex = groups.findIndex(g => g.author._id === user?.id || g.author._id === user?._id);
+    const userGroup = userGroupIndex !== -1 ? groups[userGroupIndex] : null;
+    const otherGroups = groups.filter((_, i) => i !== userGroupIndex);
+
     return (
-        <div className="relative group">
-            {/* Left Scroll Button */}
+        <div className="relative group/reel mb-4">
+            {/* Scroll Buttons */}
             {canScrollLeft && (
                 <button
                     onClick={() => scroll('left')}
-                    className="absolute left-0 top-[40%] -translate-y-1/2 z-10 bg-gradient-to-b from-white to-gray-100 rounded-full p-1.5 shadow border border-gray-200 text-gray-600 hover:text-gray-900 transition-all active:scale-95"
-                    aria-label="Scroll left"
+                    className="absolute left-0 top-[36px] -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-lg border border-gray-100 text-gray-600 hover:text-black transition-all"
                 >
-                    <ChevronLeft className="h-4 w-4 stroke-[2.5]" />
+                    <ChevronLeft className="h-4 w-4 stroke-[3]" />
                 </button>
             )}
 
-            {/* Reel Container */}
             <div
                 ref={scrollRef}
                 onScroll={checkScroll}
-                className="flex gap-5 overflow-x-auto no-scrollbar py-2 items-start mt-2 pl-1 scroll-smooth"
+                className="flex gap-4 overflow-x-auto no-scrollbar py-2 items-start pl-1 scroll-smooth"
             >
-                {STORIES.map((story) => {
-                    const ringSize = "h-[60px] w-[60px] md:h-[72px] md:w-[72px]"; // Responsive size
-                    const imageSize = "h-[52px] w-[52px] md:h-[62px] md:w-[62px]"; // Responsive size
-
-                    if (story.isUser) {
-                        return (
-                            <div key={story.id} className="flex flex-col items-center gap-2 cursor-pointer group/story shrink-0">
-                                <div className={`relative ${ringSize} rounded-full border-[2px] border-dashed border-gray-300 flex items-center justify-center p-1`}>
-                                    <Avatar
-                                        src={story.img}
-                                        className={`${imageSize} rounded-full`}
-                                    />
-                                    <div className="absolute bottom-0 right-0 bg-[var(--color-primary)] rounded-full p-1 border-[2.5px] border-white translate-x-1 translate-y-0.5 shadow-sm">
-                                        <Plus className="h-3.5 w-3.5 text-white stroke-[3.5px]" />
-                                    </div>
+                {/* Create/View Own Story Button */}
+                <div className="flex flex-col items-center gap-2 shrink-0">
+                    <div 
+                        className={cn(
+                            "relative h-[66px] w-[66px] md:h-[72px] md:w-[72px] rounded-full flex items-center justify-center p-1 cursor-pointer transition-all group/add",
+                            userGroup?.hasUnseen 
+                                ? "ring-[2.5px] ring-black ring-offset-2" 
+                                : userGroup 
+                                    ? "border border-gray-200" 
+                                    : "border-[2.5px] border-dashed border-gray-300",
+                            isUploading && "opacity-50 cursor-not-allowed"
+                        )}
+                        onClick={() => {
+                            if (isUploading) return;
+                            if (userGroup) {
+                                openViewer(userGroupIndex);
+                            } else {
+                                fileInputRef.current?.click();
+                            }
+                        }}
+                    >
+                        {isUploading ? (
+                            <Loader2 className="h-6 w-6 text-[var(--color-primary)] animate-spin" />
+                        ) : (
+                            <>
+                                <Avatar 
+                                    src={user?.avatar || ''} 
+                                    className={cn(
+                                        "h-full w-full rounded-full transition-all",
+                                        !userGroup && "grayscale-[0.5] group-hover/add:grayscale-0"
+                                    )} 
+                                />
+                                <div 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        fileInputRef.current?.click();
+                                    }}
+                                    className="absolute bottom-0 right-0 bg-black rounded-full p-1 border-[2.5px] border-white shadow-sm hover:scale-110 transition-transform z-20 cursor-pointer"
+                                >
+                                    <Plus className="h-3 w-3 text-white stroke-[4]" />
                                 </div>
-                                <span className="text-[13px] font-bold text-gray-900 tracking-tight">{story.name}</span>
-                            </div>
-                        )
-                    }
+                            </>
+                        )}
+                        <input 
+                            type="file" 
+                            ref={fileInputRef} 
+                            onChange={handleFileSelect} 
+                            accept="image/*" 
+                            className="hidden" 
+                        />
+                    </div>
+                    <span className={cn(
+                        "text-[11px] font-black uppercase tracking-wider",
+                        userGroup?.hasUnseen ? "text-black" : "text-gray-400"
+                    )}>
+                        You
+                    </span>
+                </div>
 
+                {/* Other Story Groups */}
+                {otherGroups.map((group) => {
+                    const originalIndex = groups.findIndex(g => g.author._id === group.author._id);
                     return (
-                        <div key={story.id} className="flex flex-col items-center gap-2 cursor-pointer group/story shrink-0">
-                            <div className={`${ringSize} rounded-full border-[2.5px] ${story.seen ? 'border-gray-200' : 'border-[var(--color-primary)]'} flex items-center justify-center p-1`}>
+                        <div 
+                            key={group.author._id} 
+                            onClick={() => openViewer(originalIndex)}
+                            className="flex flex-col items-center gap-2 cursor-pointer group/story shrink-0"
+                        >
+                            <div className={cn(
+                                "h-[66px] w-[66px] md:h-[72px] md:w-[72px] rounded-full flex items-center justify-center p-1.5 transition-all group-active/story:scale-95",
+                                group.hasUnseen 
+                                    ? "ring-[2.5px] ring-black ring-offset-2" 
+                                    : "border border-gray-100"
+                            )}>
                                 <Avatar
-                                    src={story.img}
-                                    className={`${imageSize} rounded-full`}
+                                    src={group.author.avatar}
+                                    name={group.author.name}
+                                    className="h-full w-full rounded-full"
                                 />
                             </div>
-                            <span className="text-[13px] font-medium text-gray-700 group-hover/story:text-gray-900 transition-colors">{story.name}</span>
+                            <span className={cn(
+                                "text-[12px] font-bold tracking-tight truncate max-w-[70px]",
+                                group.hasUnseen ? "text-black" : "text-gray-400"
+                            )}>
+                                {group.author.name.split(' ')[0]}
+                            </span>
                         </div>
                     );
                 })}
+
+                {isLoading && Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="flex flex-col items-center gap-2 shrink-0 animate-pulse">
+                        <div className="h-[66px] w-[66px] md:h-[72px] md:w-[72px] rounded-full bg-gray-100" />
+                        <div className="h-3 w-12 bg-gray-100 rounded" />
+                    </div>
+                ))}
             </div>
 
-            {/* Right Scroll Button */}
-            {canScrollRight && (
+            {canScrollRight && !isLoading && groups.length > 3 && (
                 <button
                     onClick={() => scroll('right')}
-                    className="absolute right-0 top-[40%] -translate-y-1/2 z-10 bg-gradient-to-b from-white to-gray-100 rounded-full p-1.5 shadow border border-gray-200 text-gray-600 hover:text-gray-900 transition-all opacity-80 hover:opacity-100 active:scale-95"
-                    aria-label="Scroll right"
+                    className="absolute right-0 top-[36px] -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-lg border border-gray-100 text-gray-600 hover:text-black transition-all"
                 >
-                    <ChevronRight className="h-4 w-4 stroke-[2.5]" />
+                    <ChevronRight className="h-4 w-4 stroke-[3]" />
                 </button>
+            )}
+
+            {viewerState.isOpen && (
+                <StoryViewer 
+                    key={viewerSession}
+                    isOpen={viewerState.isOpen}
+                    groups={groups}
+                    initialGroupIndex={viewerState.groupIndex}
+                    onClose={() => setViewerState(prev => ({ ...prev, isOpen: false }))}
+                    onViewed={handleStoryViewed}
+                    onLiked={handleStoryLiked}
+                />
             )}
         </div>
     );
