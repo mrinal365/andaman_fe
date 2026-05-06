@@ -1,3 +1,5 @@
+import { chatConfig } from './chatConfig';
+
 export type AppEnv = 'local' | 'stage' | 'prod';
 
 interface Config {
@@ -10,6 +12,7 @@ interface Config {
         name: string;
         version: string;
     };
+    chat: typeof chatConfig;
 }
 
 const commonDefaults = {
@@ -20,6 +23,7 @@ const commonDefaults = {
         name: 'Andaman',
         version: '1.0.0',
     },
+    chat: chatConfig,
 };
 
 const local: Config = {
@@ -27,7 +31,7 @@ const local: Config = {
     ...commonDefaults,
     api: {
         ...commonDefaults.api,
-        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1',
+        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
     },
 };
 
@@ -36,7 +40,7 @@ const stage: Config = {
     ...commonDefaults,
     api: {
         ...commonDefaults.api,
-        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://stage-api.example.com/api/v1',
+        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://stage-api.example.com/api',
     },
 };
 
@@ -45,7 +49,7 @@ const prod: Config = {
     ...commonDefaults,
     api: {
         ...commonDefaults.api,
-        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api.example.com/api/v1',
+        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api.example.com/api',
     },
 };
 

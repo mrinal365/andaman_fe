@@ -1,11 +1,14 @@
 import { Avatar } from '@/components/common/Avatar';
 import { Card } from '@/components/common/Card';
 import { Image as ImageIcon, Smile, Send } from 'lucide-react';
+import { useAppSelector } from '@/store/hooks';
+import { RootState } from '@/store/store';
 
 export const CreatePost = () => {
+    const user = useAppSelector((state: RootState) => state.user.user);
     return (
         <Card className="flex items-center gap-4 py-3" padding="md">
-            <Avatar src="https://i.pravatar.cc/150?u=me" size="md" />
+            <Avatar src={user?.avatar} name={user?.name} handle={user?.handle} size="md" />
             <div className="flex-1 relative">
                 <input
                     type="text"

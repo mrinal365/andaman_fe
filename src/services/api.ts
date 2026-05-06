@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { config } from '@/config';
 import { toast, ToastContainer } from 'react-toastify';
+import { TOKEN_KEY } from '@/constants';
+import { getCookie } from '@/utils';
 
 const api = axios.create({
     baseURL: config.api.baseUrl,
@@ -14,7 +16,7 @@ const api = axios.create({
 api.interceptors.request.use(
     (config) => {
         // You can add auth token here if available
-        const token = localStorage.getItem('token');
+        const token = getCookie(TOKEN_KEY);
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }

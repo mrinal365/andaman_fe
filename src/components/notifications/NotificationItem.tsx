@@ -1,113 +1,101 @@
 'use client';
 
-import { Users, Shield, Calendar } from 'lucide-react';
+import { Heart, MessageCircle, UserPlus, Repeat2, Bell, X } from 'lucide-react';
 import { Avatar } from '@/components/common/Avatar';
-import Image from 'next/image';
-import { Notification } from './data';
 import { cn } from '@/utils/cn';
 
 interface NotificationItemProps {
-    notification: Notification;
+    notification: {
+        _id: string;
+        type: string;
+        title?: string;
+        body?: string;
+        read: boolean;
+        sender?: {
+            _id?: string;
+            name?: string;
+            avatar?: string;
+            handle?: string;
+        };
+        createdAt: string;
+        data?: Record<string, any>;
+    };
+    onMarkRead?: (id: string) => void;
+    onDelete?: (id: string) => void;
 }
 
-export const NotificationItem = ({ notification }: NotificationItemProps) => {
-    const { type, actor, content, timestamp, isUnread, actionLabel, previewImage } = notification;
+const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
+    likePost:    { icon: Heart,          color: 'text-red-500',    bg: 'bg-red-50'    },
+    likeComment: { icon: Heart,          color: 'text-red-400',    bg: 'bg-red-50'    },
+    comment:     { icon: MessageCircle, color: 'text-blue-500',   bg: 'bg-blue-50'   },
+    reply:       { icon: MessageCircle, color: 'text-blue-400',   bg: 'bg-blue-50'   },
+    follow:      { icon: UserPlus,      color: 'text-green-500',  bg: 'bg-green-50'  },
+    resharePost: { icon: Repeat2,       color: 'text-purple-500', bg: 'bg-purple-50' },
+    message:     { icon: MessageCircle, color: 'text-gray-500',   bg: 'bg-gray-100'  },
+};
 
-    // Helper to render the appropriate avatar or icon
-    const renderAvatar = () => {
-        if (type === 'trending') {
-            return (
-                <div className="h-9 w-9 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center shrink-0">
-                    <Users className="h-4.5 w-4.5 text-[var(--color-primary)]" />
-                </div>
-            );
-        }
-        if (type === 'system') {
-            return (
-                <div className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                    <Shield className="h-4.5 w-4.5 text-gray-600" />
-                </div>
-            );
-        }
-        if (type === 'reminder') {
-            return (
-                <div className="h-9 w-9 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-                    <Calendar className="h-4.5 w-4.5 text-blue-500" />
-                </div>
-            );
-        }
+const timeAgo = (date: string) => {
+    const diff = Date.now() - new Date(date).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    return new Date(date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+};
 
-        // Default Avatar
-        return <Avatar src={actor.avatar} name={actor.name} size="md" className="h-9 w-9 text-xs" />;
-    };
+export const NotificationItem = ({ notification, onMarkRead, onDelete }: NotificationItemProps) => {
+    const { _id, type, body, read, sender, createdAt } = notification;
+    const config = TYPE_CONFIG[type] || { icon: Bell, color: 'text-gray-500', bg: 'bg-gray-100' };
+    const Icon = config.icon;
 
     return (
-        <div className={cn(
-            "flex items-start gap-3 py-3 px-4 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer group relative",
-            isUnread ? "bg-white" : "bg-white"
-        )}>
+        <div
+            data-id={_id}
+            data-read={read}
+            className={cn(
+                "flex items-start gap-3 py-3 px-4 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer group relative",
+                !read && "bg-[var(--color-primary)]/[0.02]"
+            )}
+            onClick={() => !read && onMarkRead?.(_id)}
+        >
             {/* Unread Indicator */}
-            {isUnread && (
-                <span className="absolute left-1 top-4 h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]"></span>
+            {!read && (
+                <span className="absolute left-1.5 top-4.5 h-1.5 w-1.5 rounded-full bg-[var(--color-primary)] shrink-0" />
             )}
 
-            {/* Avatar/Icon */}
-            {renderAvatar()}
-
-            {/* Content Content */}
-            <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                <p className="text-[13px] text-gray-900 leading-snug">
-                    {(() => {
-                        if (type === 'trending') {
-                            const parts = content.split(actor.name);
-                            return (
-                                <>
-                                    <span className="text-gray-900">{parts[0]}</span>
-                                    <span className="font-bold text-gray-900">{actor.name}</span>
-                                    <span className="text-gray-900">{parts.slice(1).join(actor.name)}</span>
-                                </>
-                            );
-                        }
-                        if (type === 'reminder') {
-                            return (
-                                <>
-                                    <span className="font-bold text-gray-900">{actor.name}: </span>
-                                    <span className="text-gray-900 font-bold">Design Team Sync</span>
-                                    <span className="text-gray-900"> starts in 15 minutes.</span>
-                                </>
-                            );
-                        }
-                        return (
-                            <>
-                                <span className="font-bold text-gray-900">{actor.name}</span>
-                                <span className="text-gray-900"> {content}</span>
-                            </>
-                        );
-                    })()}
-                </p>
-
-                <p className={cn(
-                    "text-[10px] font-medium mt-0.5",
-                    isUnread ? "text-[var(--color-primary)]" : "text-gray-400"
-                )}>{timestamp}</p>
+            {/* Avatar with type icon badge */}
+            <div className="relative shrink-0">
+                <Avatar src={sender?.avatar} name={sender?.name || '?'} size="md" className="h-9 w-9 text-xs" />
+                <div className={cn("absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full flex items-center justify-center shadow-sm border border-white", config.bg)}>
+                    <Icon className={cn("h-2.5 w-2.5", config.color)} />
+                </div>
             </div>
 
-            {/* Right Side Action/Preview */}
-            {actionLabel && (
-                <button className="px-3 py-1 border border-gray-200 rounded-full text-[10px] font-bold text-gray-700 hover:bg-gray-50 transition-colors uppercase tracking-wide shrink-0">
-                    {actionLabel}
-                </button>
-            )}
+            {/* Content */}
+            <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                <p className="text-[13px] text-gray-900 leading-snug">
+                    {sender?.name && <span className="font-bold">{sender.name} </span>}
+                    <span className="text-gray-600">{body}</span>
+                </p>
+                <p className={cn(
+                    "text-[10px] font-medium mt-0.5",
+                    !read ? "text-[var(--color-primary)]" : "text-gray-400"
+                )}>
+                    {timeAgo(createdAt)}
+                </p>
+            </div>
 
-            {previewImage && (
-                <div className="h-9 w-9 rounded-lg overflow-hidden shrink-0 relative border border-gray-100">
-                    <Image
-                        src={previewImage}
-                        alt="Preview"
-                        fill
-                        className="object-cover"
-                    />
-                </div>
+            {/* Delete button (visible on hover) */}
+            {onDelete && (
+                <button
+                    onClick={(e) => { e.stopPropagation(); onDelete(_id); }}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center shrink-0"
+                >
+                    <X className="h-3 w-3 text-gray-500" />
+                </button>
             )}
         </div>
     );

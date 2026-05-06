@@ -10,12 +10,15 @@ import { Button } from '@/components/common/Button';
 
 import { GoogleIcon } from '@/components/icons';
 import { isFormDataValid } from './utils';
-import { login } from '@/services/authService';
+import { login, googleLogin } from '@/services/authService';
 import { setCookie } from '@/utils';
+import { TOKEN_KEY } from '@/constants';
+import { useGoogleLogin } from '@react-oauth/google';
+import { GoogleProgressModal } from '@/components/auth/GoogleProgressModal';
 
 export default function LoginPage() {
     const router = useRouter()
-    const searchParams = useSearchParams(); // Get search params
+    // const searchParams = useSearchParams(); // Get search params
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -27,14 +30,10 @@ export default function LoginPage() {
     });
 
     const [isLoggingLoading, setIsLoggingLoading] = useState(false);
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+    const [showProgressModal, setShowProgressModal] = useState(false);
+    const [pendingAuthResponse, setPendingAuthResponse] = useState<any>(null);
 
-    // Check for error param on mount
-    // useEffect(() => {
-    //     const error = searchParams.get('error');
-    //     if (error === 'session_expired') {
-    //         toast.error('Session expired. Please login again.');
-    //     }
-    // }, [searchParams]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -48,7 +47,7 @@ export default function LoginPage() {
         setIsLoggingLoading(true)
         login(formData).then((res) => {
             toast.success("Login Successful");
-            setCookie("token", res?.token);
+            setCookie(TOKEN_KEY, res?.token);
             router.push("/feed");
             console.log("res", res);
         }).catch((err) => {
@@ -61,6 +60,34 @@ export default function LoginPage() {
         console.log('Login Data:', formData);
         // Add auth logic here
     };
+
+    const handleGoogleLoginSuccess = async (tokenResponse: any) => {
+        setIsGoogleLoading(true);
+        try {
+            const res = await googleLogin(tokenResponse.access_token);
+            if (res.isNewUser) {
+                setPendingAuthResponse(res);
+                setShowProgressModal(true);
+            } else {
+                completeLogin(res);
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Google login failed");
+        } finally {
+            setIsGoogleLoading(false);
+        }
+    };
+
+    const completeLogin = (res: any) => {
+        toast.success("Login Successful");
+        setCookie(TOKEN_KEY, res?.token);
+        router.push("/feed");
+    };
+
+    const loginWithGoogle = useGoogleLogin({
+        onSuccess: handleGoogleLoginSuccess,
+        onError: () => toast.error("Google login failed"),
+    });
 
 
 
@@ -130,10 +157,17 @@ export default function LoginPage() {
                             type="button"
                             variant="primary"
                             icon={<GoogleIcon />}
+                            loading={isGoogleLoading}
+                            onClick={() => loginWithGoogle()}
                         >
                             Sign in with Google
                         </Button>
                     </form>
+
+                    <GoogleProgressModal
+                        isOpen={showProgressModal}
+                        onComplete={() => completeLogin(pendingAuthResponse)}
+                    />
 
                     <div className="mt-8 text-center">
                         <p className="text-neutral-400 text-sm">
