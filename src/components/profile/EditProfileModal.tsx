@@ -55,7 +55,7 @@ export const EditProfileModal = ({ isOpen, onClose, user }: EditProfileModalProp
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (formData.password && formData.password !== formData.confirmPassword) {
             toast.error("Passwords don't match");
             return;
@@ -167,7 +167,7 @@ export const EditProfileModal = ({ isOpen, onClose, user }: EditProfileModalProp
                                     {tags.map((tag) => (
                                         <span key={tag} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-primary)]/10 text-[var(--color-primary)] text-xs font-bold border border-[var(--color-primary)]/20">
                                             {tag}
-                                            <button 
+                                            <button
                                                 type="button"
                                                 onClick={() => removeTag(tag)}
                                                 className="hover:text-red-500 transition-colors"
@@ -217,7 +217,7 @@ export const EditProfileModal = ({ isOpen, onClose, user }: EditProfileModalProp
                 <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
                     <Button
                         type="button"
-                        variant="secondary"
+                        variant='outline'
                         className="flex-1 rounded-xl h-[48px]"
                         onClick={onClose}
                         disabled={isSubmitting}

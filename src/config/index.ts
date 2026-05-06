@@ -31,7 +31,7 @@ const local: Config = {
     ...commonDefaults,
     api: {
         ...commonDefaults.api,
-        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://andaman-be.vercel.app/api',
     },
 };
 
@@ -40,7 +40,7 @@ const stage: Config = {
     ...commonDefaults,
     api: {
         ...commonDefaults.api,
-        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://stage-api.example.com/api',
+        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://andaman-be.vercel.app/api',
     },
 };
 
@@ -49,7 +49,7 @@ const prod: Config = {
     ...commonDefaults,
     api: {
         ...commonDefaults.api,
-        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api.example.com/api',
+        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://andaman-be.vercel.app/api',
     },
 };
 
