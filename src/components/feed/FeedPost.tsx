@@ -94,6 +94,9 @@ export const FeedPost = ({ post }: { post: Post }) => {
     // IMAGE GRID LAYOUTS
     // =====================
     const renderImageGrid = () => {
+        // If it's a video post, don't render images
+        if (content.video) return null;
+
         if (postImages.length === 0) return null;
 
         if (postImages.length === 1) {

@@ -1,5 +1,5 @@
 'use client';
- 
+
 import { User } from '../../../types/user';
 
 import Link from 'next/link';
@@ -18,15 +18,15 @@ export const TopNavbar = () => {
     const router = useRouter();
 
     const unreadNotifications = useAppSelector((state: RootState) => state.notifications.unreadCount);
-    const unreadMessages     = useAppSelector((state: RootState) => state.notifications.unreadMessages);
-    const currentUser        = useAppSelector((state: RootState) => state.user.user);
+    const unreadMessages = useAppSelector((state: RootState) => state.notifications.unreadMessages);
+    const currentUser = useAppSelector((state: RootState) => state.user.user);
 
 
 
     const NAV_ITEMS = [
-        { icon: Users,        route: '/communities',   badge: 0, comingSoon: chatConfig.comingSoon.communities },
-        { icon: MessageSquare, route: '/messages',     badge: unreadMessages },
-        { icon: Bell,          route: '/notifications', badge: unreadNotifications },
+        { icon: Users, route: '/communities', badge: 0, comingSoon: chatConfig.comingSoon.communities },
+        { icon: MessageSquare, route: '/messages', badge: unreadMessages },
+        { icon: Bell, route: '/notifications', badge: unreadNotifications },
     ];
 
     return (

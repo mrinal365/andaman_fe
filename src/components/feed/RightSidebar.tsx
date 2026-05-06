@@ -101,10 +101,10 @@ export const RightSidebar = () => {
                     <h3 className="font-bold text-gray-500 text-[11px] tracking-widest uppercase">COMMUNITIES</h3>
                 </div>
                 {chatConfig.comingSoon.communities ? (
-                    <ComingSoonPoster 
-                        compact 
-                        title="Communities Coming Soon" 
-                        description="Join groups that share your passions." 
+                    <ComingSoonPoster
+                        compact
+                        title="Communities Coming Soon"
+                        description="Join groups that share your passions."
                     />
                 ) : (
                     <div className="flex flex-col gap-4">

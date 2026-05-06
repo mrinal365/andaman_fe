@@ -164,9 +164,9 @@ export default function LoginPage() {
                         </Button>
                     </form>
 
-                    <GoogleProgressModal 
-                        isOpen={showProgressModal} 
-                        onComplete={() => completeLogin(pendingAuthResponse)} 
+                    <GoogleProgressModal
+                        isOpen={showProgressModal}
+                        onComplete={() => completeLogin(pendingAuthResponse)}
                     />
 
                     <div className="mt-8 text-center">
