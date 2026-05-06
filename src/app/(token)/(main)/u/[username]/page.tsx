@@ -18,7 +18,8 @@ import {
     MessageSquare,
     Loader2,
     Image as ImageIcon,
-    ArrowLeft
+    ArrowLeft,
+    LogOut
 } from 'lucide-react';
 import {
     getUserProfile,
@@ -40,6 +41,7 @@ import { setSelectedConversation, addOrUpdateConversation } from '@/store/featur
 import { updateUserInfo } from '@/store/features/userSlice';
 import { toast } from 'react-toastify';
 import { EditProfileModal } from '@/components/profile/EditProfileModal';
+import { useLogout } from '@/hooks/useLogout';
 
 export default function ProfilePage() {
     const { username } = useParams();
@@ -70,7 +72,11 @@ export default function ProfilePage() {
     const [followList, setFollowList] = useState<User[]>([]);
     const [isLoadingFollow, setIsLoadingFollow] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    const { logout } = useLogout();
 
     const avatarInputRef = useRef<HTMLInputElement>(null);
     const coverInputRef = useRef<HTMLInputElement>(null);
@@ -133,6 +139,22 @@ export default function ProfilePage() {
             setIsFollowLoading(false);
         }
     };
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsMenuOpen(false);
+            }
+        };
+
+        if (isMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isMenuOpen]);
 
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'cover') => {
@@ -470,9 +492,50 @@ export default function ProfilePage() {
                                 <span>Edit Profile</span>
                             </button>
                         )}
-                        <button className="bg-gray-100 text-gray-900 p-2 rounded-lg font-bold hover:bg-gray-200 transition-all shadow-sm">
-                            <MoreHorizontal size={20} />
-                        </button>
+                        <div className="relative" ref={menuRef}>
+                            <button 
+                                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                className="bg-gray-100 text-gray-900 p-2 rounded-lg font-bold hover:bg-gray-200 transition-all shadow-sm h-[40px] w-[40px] flex items-center justify-center"
+                            >
+                                <MoreHorizontal size={20} />
+                            </button>
+
+                            <AnimatePresence>
+                                {isMenuOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                        className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-[100]"
+                                    >
+                                        {isOwnProfile && (
+                                            <button
+                                                onClick={() => {
+                                                    setIsMenuOpen(false);
+                                                    logout();
+                                                }}
+                                                className="w-full px-4 py-2 text-left text-sm font-bold text-red-500 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                                            >
+                                                <LogOut size={16} />
+                                                <span>Logout</span>
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => {
+                                                setIsMenuOpen(false);
+                                                // Copy link or something
+                                                navigator.clipboard.writeText(window.location.href);
+                                                toast.success("Profile link copied!");
+                                            }}
+                                            className="w-full px-4 py-2 text-left text-sm font-bold text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                                        >
+                                            <LinkIcon size={16} />
+                                            <span>Copy Link</span>
+                                        </button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
                     </div>
                 </div>
 
