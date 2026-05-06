@@ -16,6 +16,7 @@ import { cn } from '@/utils/cn';
 import { toggleLikeOptimistic, toggleSavedOptimistic, deletePostOptimistic } from '@/store/features/postSlice';
 import { VideoPlayer } from './VideoPlayer';
 import { PostDetailModal } from './PostDetailModal';
+import { renderTextWithTags } from '@/utils/textParser';
 
 import { Avatar } from '@/components/common/Avatar';
 import { Card } from '@/components/common/Card';
@@ -298,7 +299,7 @@ export const FeedPost = ({ post }: { post: Post }) => {
                             size="md"
                         />
                         <div>
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1 flex-wrap">
                                 <Link
                                     href={`/u/${authorHandle}`}
                                     className="font-bold text-sm text-gray-900 leading-none hover:underline"
@@ -308,6 +309,23 @@ export const FeedPost = ({ post }: { post: Post }) => {
                                 </Link>
                                 {post?.authorId?.verified && (
                                     <BadgeCheck className="h-[14px] w-[14px] text-green-700 fill-green-700/30" />
+                                )}
+                                {post?.taggedUsers && post.taggedUsers.length > 0 && (
+                                    <span className="text-[13px] text-gray-500 flex items-center gap-1 flex-wrap">
+                                        with{' '}
+                                        {post.taggedUsers.map((tu: any, index: number) => (
+                                            <span key={tu._id}>
+                                                <Link 
+                                                    href={`/u/${tu.handle}`} 
+                                                    className="font-bold text-gray-700 hover:text-[var(--color-primary)] transition-colors hover:underline"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    {tu.name}
+                                                </Link>
+                                                {index < (post.taggedUsers?.length || 0) - 1 ? ', ' : ''}
+                                            </span>
+                                        ))}
+                                    </span>
                                 )}
                             </div>
                             <p className="text-xs text-gray-500 font-medium mt-0.5">
@@ -373,10 +391,8 @@ export const FeedPost = ({ post }: { post: Post }) => {
                 {post?.feed?.title && (
                     <p className="text-[14px] text-gray-800 leading-relaxed font-bold">{post.feed.title}</p>
                 )}
-                <p className="text-[14px] text-gray-800 leading-relaxed font-normal">
-                    {post?.feed?.previewText?.split(' ')?.map((word: string, i: number) =>
-                        word.startsWith('#') ? <span key={i} className="text-[var(--color-primary)] font-semibold">{word} </span> : word + ' '
-                    )}
+                <p className="text-[14px] text-gray-800 leading-relaxed font-normal whitespace-pre-wrap">
+                    {renderTextWithTags(post?.feed?.previewText || '')}
                 </p>
 
                 {/* Content: Video OR Image Grid */}

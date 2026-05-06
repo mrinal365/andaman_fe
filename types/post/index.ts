@@ -41,5 +41,6 @@ export interface Post {
     viewerState: PostViewerState;
     createdAt: string;
     updatedAt: string;
-    feed: FeedDetails
+    feed: FeedDetails;
+    taggedUsers?: any[];
 }

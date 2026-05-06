@@ -39,13 +39,13 @@ export const savePost = async (postId: string): Promise<any> => {
     return response.data;
 };
 
-export const commentOnPost = async (postId: string, comment: string): Promise<any> => {
-    const response = await api.post<any>(`/posts/${postId}/comments`, { text: comment });
+export const commentOnPost = async (postId: string, comment: string, taggedUsers?: string[]): Promise<any> => {
+    const response = await api.post<any>(`/posts/${postId}/comments`, { text: comment, taggedUsers });
     return response.data;
 };
 
-export const replyToComment = async (commentId: string, replyText: string): Promise<any> => {
-    const response = await api.post<any>(`/comments/${commentId}/reply`, { text: replyText });
+export const replyToComment = async (commentId: string, replyText: string, taggedUsers?: string[]): Promise<any> => {
+    const response = await api.post<any>(`/comments/${commentId}/reply`, { text: replyText, taggedUsers });
     return response.data;
 };
 

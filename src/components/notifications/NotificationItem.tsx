@@ -3,6 +3,7 @@
 import { Heart, MessageCircle, UserPlus, Repeat2, Bell, X } from 'lucide-react';
 import { Avatar } from '@/components/common/Avatar';
 import { cn } from '@/utils/cn';
+import { renderTextWithTags } from '@/utils/textParser';
 
 interface NotificationItemProps {
     notification: {
@@ -78,7 +79,7 @@ export const NotificationItem = ({ notification, onMarkRead, onDelete }: Notific
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                 <p className="text-[13px] text-gray-900 leading-snug">
                     {sender?.name && <span className="font-bold">{sender.name} </span>}
-                    <span className="text-gray-600">{body}</span>
+                    <span className="text-gray-600 whitespace-pre-wrap">{renderTextWithTags(body || '')}</span>
                 </p>
                 <p className={cn(
                     "text-[10px] font-medium mt-0.5",

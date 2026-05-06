@@ -11,13 +11,16 @@ import {
     Info, 
     ImagePlus, 
     Loader2, 
-    X 
+    X,
+    UserPlus,
+    Search
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { RootState } from '@/store/store';
 import { createPost } from '@/services/feedService';
 import { addPostOptimistic } from '@/store/features/postSlice';
 import { uploadImage } from '@/services/uploadService';
+import { searchUsers } from '@/services/userService';
 
 interface CreatePostModalProps {
     isOpen: boolean;
@@ -35,6 +38,43 @@ export const CreatePostModal = ({ isOpen, onClose }: CreatePostModalProps) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [images, setImages] = useState<string[]>([]);
     const [isUploading, setIsUploading] = useState(false);
+    
+    // Tagging state
+    const [taggedUsers, setTaggedUsers] = useState<any[]>([]);
+    const [isTagging, setIsTagging] = useState(false);
+    const [tagQuery, setTagQuery] = useState('');
+    const [tagResults, setTagResults] = useState<any[]>([]);
+    const [isSearchingTags, setIsSearchingTags] = useState(false);
+
+    const handleSearchTags = async (q: string) => {
+        setTagQuery(q);
+        if (!q.trim()) {
+            setTagResults([]);
+            return;
+        }
+        setIsSearchingTags(true);
+        try {
+            const res = await searchUsers(q);
+            setTagResults(res.filter(u => u._id !== user?.id && !taggedUsers.find(tu => tu._id === u._id)));
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsSearchingTags(false);
+        }
+    };
+
+    const addTag = (u: any) => {
+        if (taggedUsers.length < 10) {
+            setTaggedUsers(prev => [...prev, u]);
+            setTagQuery('');
+            setTagResults([]);
+            setIsTagging(false);
+        }
+    };
+
+    const removeTag = (id: string) => {
+        setTaggedUsers(prev => prev.filter(u => u._id !== id));
+    };
 
     const handlePostSubmit = (closeModal: () => void) => {
         setIsSubmitting(true);
@@ -52,7 +92,8 @@ export const CreatePostModal = ({ isOpen, onClose }: CreatePostModalProps) => {
         const payload = {
             type: postType,
             content,
-            images: validImages
+            images: validImages,
+            taggedUsers: taggedUsers.map(u => u._id)
         };
 
         createPost(payload).then((res) => {
@@ -67,6 +108,7 @@ export const CreatePostModal = ({ isOpen, onClose }: CreatePostModalProps) => {
             setPostTitle('');
             setPostType('update');
             setImages([]);
+            setTaggedUsers([]);
             closeModal();
         }).catch((error) => {
             console.error("Failed to submit post", error);
@@ -189,13 +231,78 @@ export const CreatePostModal = ({ isOpen, onClose }: CreatePostModalProps) => {
                         </div>
                     )}
 
+                    {/* Tagged users display */}
+                    {taggedUsers.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                            {taggedUsers.map(u => (
+                                <div key={u._id} className="flex items-center gap-1.5 bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md text-xs font-semibold">
+                                    @{u.handle}
+                                    <button onClick={() => removeTag(u._id)} className="hover:text-blue-900"><X size={12}/></button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Tag Search Modal/Dropdown logic inline */}
+                    {isTagging && (
+                        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm mt-2">
+                            <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100 bg-gray-50">
+                                <Search className="w-4 h-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search people to tag..."
+                                    value={tagQuery}
+                                    onChange={(e) => handleSearchTags(e.target.value)}
+                                    className="bg-transparent border-none outline-none text-sm w-full font-medium"
+                                    autoFocus
+                                />
+                                <button onClick={() => setIsTagging(false)} className="text-gray-400 hover:text-gray-600"><X size={16}/></button>
+                            </div>
+                            <div className="max-h-[160px] overflow-y-auto">
+                                {isSearchingTags ? (
+                                    <div className="p-4 text-center text-xs text-gray-500">Searching...</div>
+                                ) : tagResults.length > 0 ? (
+                                    tagResults.map(u => (
+                                        <button 
+                                            key={u._id} 
+                                            onClick={() => addTag(u)}
+                                            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 transition-colors text-left"
+                                        >
+                                            <Avatar src={u.avatar} name={u.name} size="sm" />
+                                            <div>
+                                                <div className="text-xs font-bold text-gray-900">{u.name}</div>
+                                                <div className="text-[10px] text-gray-500">@{u.handle}</div>
+                                            </div>
+                                        </button>
+                                    ))
+                                ) : tagQuery.trim() ? (
+                                    <div className="p-4 text-center text-xs text-gray-500">No users found</div>
+                                ) : (
+                                    <div className="p-4 text-center text-xs text-gray-500">Type a name to search</div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Footer */}
                     <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                        <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold text-gray-500 hover:bg-gray-100 cursor-pointer transition-colors">
-                            {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
-                            {isUploading ? 'Uploading...' : 'Photo'}
-                            <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={isSubmitting || images.length >= 5 || isUploading} />
-                        </label>
+                        <div className="flex items-center gap-2">
+                            <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold text-gray-500 hover:bg-gray-100 cursor-pointer transition-colors">
+                                {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                                {isUploading ? 'Uploading...' : 'Photo'}
+                                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={isSubmitting || images.length >= 5 || isUploading} />
+                            </label>
+
+                            <button 
+                                type="button"
+                                onClick={() => setIsTagging(!isTagging)}
+                                disabled={taggedUsers.length >= 10 || isSubmitting}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold text-gray-500 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                            >
+                                <UserPlus className="h-4 w-4" />
+                                Tag
+                            </button>
+                        </div>
 
                         <div className="flex items-center gap-3">
                             <Button variant="outline" className="h-[36px] px-5 text-[13px]" onClick={closeModal} disabled={isSubmitting}>Cancel</Button>

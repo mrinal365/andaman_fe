@@ -7,6 +7,7 @@ import { dismissToast } from '@/store/features/notificationSlice';
 import { Avatar } from '@/components/common/Avatar';
 import { Heart, MessageCircle, UserPlus, Repeat2, Bell } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { renderTextWithTags } from '@/utils/textParser';
 
 const TYPE_CONFIG: Record<string, { icon: any; color: string; label: string }> = {
     likePost: { icon: Heart, color: 'text-red-500', label: 'liked your post' },
@@ -57,7 +58,7 @@ const NotificationToast = ({ notification }: { notification: any }) => {
                     <span className="text-gray-600">{config.label}</span>
                 </p>
                 {notification.body && (
-                    <p className="text-[11px] text-gray-400 mt-0.5 truncate">{notification.body}</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5 truncate">{renderTextWithTags(notification.body)}</p>
                 )}
             </div>
         </div>

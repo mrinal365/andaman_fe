@@ -24,6 +24,7 @@ import { Avatar } from '@/components/common/Avatar';
 import { SafeImage } from '@/components/common/SafeImage';
 import { CommentItem } from './CommentItem';
 import { LikesModal } from '@/components/common/LikesModal';
+import { searchUsers } from '@/services/userService';
 
 interface PostDetailModalProps {
     post: any;
@@ -47,6 +48,10 @@ export const PostDetailModal = ({ post: postProp, isOpen, onClose, scrollToComme
     const [isLoadingComments, setIsLoadingComments] = useState(false);
     const [isLikesModalOpen, setIsLikesModalOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
+    
+    const [mentionQuery, setMentionQuery] = useState<{ query: string, index: number } | null>(null);
+    const [mentionResults, setMentionResults] = useState<any[]>([]);
+    const [selectedMentions, setSelectedMentions] = useState<any[]>([]);
 
     const isOwnPost = user?.id === (typeof post?.authorId === 'object' ? post?.authorId?._id : post?.authorId);
 
@@ -127,13 +132,26 @@ export const PostDetailModal = ({ post: postProp, isOpen, onClose, scrollToComme
                 break;
             case INTERACTION_TYPE.COMMENT:
                 if (!msg?.trim()) return;
+                let processedMsg = msg;
+                const taggedUserIds: string[] = [];
+                
+                selectedMentions.forEach(u => {
+                    const mentionStr = `@${u.handle}`;
+                    if (processedMsg.includes(mentionStr)) {
+                        processedMsg = processedMsg.replace(new RegExp(`@${u.handle}\\b`, 'g'), `@[${u.handle}](${u._id})`);
+                        if (!taggedUserIds.includes(u._id)) {
+                            taggedUserIds.push(u._id);
+                        }
+                    }
+                });
+
                 const tempId = 'temp-' + Date.now();
                 const optimisticComment = {
                     id: tempId,
                     _id: tempId,
                     postId: post._id,
                     parentCommentId: null,
-                    text: msg,
+                    text: processedMsg,
                     createdAt: new Date().toISOString(),
                     author: {
                         id: user?._id || '',
@@ -155,7 +173,7 @@ export const PostDetailModal = ({ post: postProp, isOpen, onClose, scrollToComme
                     commentsEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
                 }, 100);
 
-                commentOnPost(post._id, msg).then((res) => {
+                commentOnPost(post._id, processedMsg, taggedUserIds).then((res) => {
                     dispatch(replaceComment({ tempId, realComment: res }));
                 }).catch((err) => {
                     dispatch(deleteComment({ commentId: tempId }));
@@ -344,14 +362,59 @@ export const PostDetailModal = ({ post: postProp, isOpen, onClose, scrollToComme
                 </div>
 
                 {/* Comment input — sticky bottom */}
-                <div className="shrink-0 border-t border-gray-100 px-4 md:px-6 py-3 bg-white">
+                <div className="shrink-0 border-t border-gray-100 px-4 md:px-6 py-3 bg-white relative">
+                    
+                    {/* Mention Dropdown */}
+                    {mentionQuery && mentionResults.length > 0 && (
+                        <div className="absolute bottom-full left-4 md:left-6 mb-2 w-64 max-h-48 overflow-y-auto bg-white border border-gray-200 shadow-lg rounded-xl z-50">
+                            {mentionResults.map(u => (
+                                <button
+                                    key={u._id}
+                                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 transition-colors text-left"
+                                    onClick={() => {
+                                        const before = commentMessage.slice(0, mentionQuery.index);
+                                        const after = commentMessage.slice(mentionQuery.index + mentionQuery.query.length + 1);
+                                        setSelectedMentions(prev => [...prev, u]);
+                                        setCommentMessage(`${before}@${u.handle} ${after}`);
+                                        setMentionQuery(null);
+                                        commentInputRef.current?.focus();
+                                    }}
+                                >
+                                    <Avatar src={u.avatar} name={u.name} size="sm" />
+                                    <div>
+                                        <div className="text-xs font-bold text-gray-900">{u.name}</div>
+                                        <div className="text-[10px] text-gray-500">@{u.handle}</div>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
                     <div className="flex items-center gap-3">
                         <Avatar name={user?.name} src={user?.avatar} size="sm" />
                         <div className="flex-1 bg-gray-50 rounded-xl pl-3 pr-2 py-2 flex items-center justify-between focus-within:bg-white focus-within:ring-1 focus-within:ring-gray-200 transition-all">
                             <input
                                 type="text"
                                 value={commentMessage}
-                                onChange={(e) => setCommentMessage(e.target.value)}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setCommentMessage(val);
+                                    
+                                    const lastAt = val.lastIndexOf('@');
+                                    if (lastAt !== -1 && (lastAt === 0 || val[lastAt - 1] === ' ')) {
+                                        const query = val.slice(lastAt + 1);
+                                        if (!query.includes(' ')) {
+                                            setMentionQuery({ query, index: lastAt });
+                                            if (query.length > 0) {
+                                                searchUsers(query).then(res => setMentionResults(res)).catch(() => {});
+                                            } else {
+                                                setMentionResults([]);
+                                            }
+                                            return;
+                                        }
+                                    }
+                                    setMentionQuery(null);
+                                }}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') addInteraction(INTERACTION_TYPE.COMMENT, commentMessage);
                                 }}

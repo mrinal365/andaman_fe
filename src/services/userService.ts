@@ -64,5 +64,8 @@ export const getFollowing = async (userId: string): Promise<any[]> => {
     return response.data;
 };
 
-
-
+export const searchUsers = async (query: string): Promise<User[]> => {
+    if (!query) return [];
+    const response = await api.get(`/users/search?q=${encodeURIComponent(query)}`);
+    return response.data;
+};

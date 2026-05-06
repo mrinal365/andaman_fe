@@ -31,7 +31,7 @@ const local: Config = {
     ...commonDefaults,
     api: {
         ...commonDefaults.api,
-        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://andaman-be.vercel.app/api',
+        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
     },
 };
 
