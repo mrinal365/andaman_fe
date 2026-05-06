@@ -95,7 +95,7 @@ export const FeedPost = ({ post }: { post: Post }) => {
     // =====================
     const renderImageGrid = () => {
         // If it's a video post, don't render images
-        if (content.video) return null;
+        // if (content.video) return null;
 
         if (postImages.length === 0) return null;
 

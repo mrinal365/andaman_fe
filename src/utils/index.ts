@@ -30,3 +30,18 @@ export const deleteCookie = (name: string) => {
     if (typeof window === 'undefined') return;
     document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
 };
+
+export const getTagStyles = (tag?: string) => {
+    switch (tag?.toLowerCase()) {
+        case 'ad':
+            return 'bg-amber-50 text-amber-600 border-amber-100';
+        case 'event':
+            return 'bg-purple-50 text-purple-600 border-purple-100';
+        case 'poll':
+            return 'bg-blue-50 text-blue-600 border-blue-100';
+        case 'guide':
+            return 'bg-green-50 text-green-600 border-green-100';
+        default:
+            return 'bg-[var(--color-primary)]/10 text-[var(--color-primary)] border-[var(--color-primary)]/20';
+    }
+};
