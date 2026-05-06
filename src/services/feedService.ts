@@ -109,3 +109,8 @@ export const deletePost = async (postId: string): Promise<any> => {
     const response = await api.delete<any>(`/posts/${postId}`);
     return response.data;
 };
+
+export const deleteComment = async (commentId: string): Promise<any> => {
+    const response = await api.delete<any>(`/comments/${commentId}`);
+    return response.data;
+};

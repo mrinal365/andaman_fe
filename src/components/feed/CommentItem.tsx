@@ -1,17 +1,18 @@
 'use client'
 
 import { useState } from 'react';
-import { Heart, MessageCircle } from 'lucide-react';
+import { Heart, MessageCircle, Trash2 } from 'lucide-react';
 import { Avatar } from '@/components/common/Avatar';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { RootState } from '@/store/store';
-import { toggleCommentLikeOptimistic, addCommentOptimistic, replaceComment, deleteComment } from '@/store/features/commentSlice';
-import { increaseCommentCount } from '@/store/features/postSlice';
-import { likeUnlikeComment, replyToComment } from '@/services/feedService';
+import { toggleCommentLikeOptimistic, addCommentOptimistic, replaceComment, deleteComment as deleteCommentOptimistic } from '@/store/features/commentSlice';
+import { decreaseCommentCount, increaseCommentCount } from '@/store/features/postSlice';
+import { likeUnlikeComment, replyToComment, deleteComment } from '@/services/feedService';
 import { cn } from '@/utils/cn';
 import { toast } from 'react-toastify';
 import { renderTextWithTags } from '@/utils/textParser';
 import { searchUsers } from '@/services/userService';
+import { ConfirmModal } from '@/components/common/ConfirmModal';
 
 interface CommentItemProps {
     commentId: string;
@@ -27,10 +28,16 @@ export const CommentItem = ({ commentId, level = 0 }: CommentItemProps) => {
     const [isReplying, setIsReplying] = useState(false);
     const [replyText, setReplyText] = useState('');
     const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     
     const [mentionQuery, setMentionQuery] = useState<{ query: string, index: number } | null>(null);
     const [mentionResults, setMentionResults] = useState<any[]>([]);
     const [selectedMentions, setSelectedMentions] = useState<any[]>([]);
+    
+    const currentUserId = user?.id || user?._id;
+    const commentAuthorId = comment.author?.id || comment.author?._id;
+    const isAuthor = currentUserId && commentAuthorId && String(currentUserId) === String(commentAuthorId);
 
     if (!comment) return null;
 
@@ -99,10 +106,25 @@ export const CommentItem = ({ commentId, level = 0 }: CommentItemProps) => {
             const res = await replyToComment(commentId, processedReplyText, taggedUserIds);
             dispatch(replaceComment({ tempId, realComment: res }));
         } catch (err: any) {
-            dispatch(deleteComment({ commentId: tempId }));
+            dispatch(deleteCommentOptimistic({ commentId: tempId }));
             toast.error(err.message || 'Failed to send reply');
         } finally {
             setIsSubmittingReply(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        setIsDeleting(true);
+        try {
+            await deleteComment(commentId);
+            dispatch(deleteCommentOptimistic({ commentId }));
+            dispatch(decreaseCommentCount(comment.postId));
+            toast.success('Comment deleted');
+            setIsDeleteConfirmOpen(false);
+        } catch (err: any) {
+            toast.error(err.message || 'Failed to delete comment');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -113,7 +135,7 @@ export const CommentItem = ({ commentId, level = 0 }: CommentItemProps) => {
                 <div className="flex-1 flex flex-col min-w-0">
                     <div className="flex items-baseline gap-1.5">
                         <span className="font-bold text-[13px] text-gray-900 leading-none">{comment.author?.name}</span>
-                        {comment.author?.id === user?.id && (
+                        {isAuthor && (
                             <span className="text-[10px] text-[var(--color-primary)] font-semibold">you</span>
                         )}
                         <span className="text-[11px] text-gray-400 leading-none">
@@ -147,6 +169,16 @@ export const CommentItem = ({ commentId, level = 0 }: CommentItemProps) => {
                             >
                                 <MessageCircle className="w-3.5 h-3.5" />
                                 {isReplying ? 'Cancel' : 'Reply'}
+                            </button>
+                        )}
+
+                        {isAuthor && (
+                            <button
+                                onClick={() => setIsDeleteConfirmOpen(true)}
+                                className="text-[11px] font-bold text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1"
+                            >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                Delete
                             </button>
                         )}
                     </div>
@@ -223,6 +255,16 @@ export const CommentItem = ({ commentId, level = 0 }: CommentItemProps) => {
                     ))}
                 </div>
             )}
+
+            <ConfirmModal 
+                isOpen={isDeleteConfirmOpen}
+                onClose={() => setIsDeleteConfirmOpen(false)}
+                onConfirm={handleDelete}
+                title="Delete Comment"
+                message="Are you sure you want to delete this comment? This action cannot be undone."
+                confirmText="Delete"
+                isLoading={isDeleting}
+            />
         </div>
     );
 };
