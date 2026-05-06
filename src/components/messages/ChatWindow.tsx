@@ -329,7 +329,7 @@ export const ChatWindow = () => {
 
     // ✅ send message to backend
     const onClickSendMessage = () => {
-        // if (!message) return;
+        if (!messageText.trim()) return;
 
         // socket.emit("send_message", {
         //     text: "Hello",
@@ -430,7 +430,7 @@ export const ChatWindow = () => {
                 conversation {selectedConversationId}
             </div> */}
             {/* Header */}
-            <div className="h-[60px] px-4 border-b border-gray-100 flex items-center justify-between shrink-0">
+            <div className="h-[60px] px-4 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white sticky top-0 z-30">
                 <div className="flex items-center gap-3">
                     {selectedConversationId && (
                         <button
@@ -626,7 +626,8 @@ export const ChatWindow = () => {
             )}
 
             {/* Input */}
-            <div className="relative p-4 pt-0 shrink-0">
+            <div className="relative p-4 pt-0 shrink-0 bg-white sticky bottom-0 z-30">
+            {/* Added bg-white and sticky bottom to ensure it stays fixed if the parent height is weird */}
                 {/* Emoji Picker Popover */}
                 {showEmoji && (
                     <div className="absolute bottom-full mb-2 left-4 z-50 shadow-xl rounded-xl">

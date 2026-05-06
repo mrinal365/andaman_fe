@@ -14,6 +14,7 @@ import { socket } from '@/utils/socket';
 export default function MessagesPage() {
     const dispatch = useAppDispatch();
     const conversations = useAppSelector((state: RootState) => state.conversations);
+    const [isLoading, setIsLoading] = useState(true);
     const selectedConversationId = conversations.selectedConversationId;
 
     const activeConversation = selectedConversationId ? conversations.byId[selectedConversationId] : null;
@@ -23,6 +24,7 @@ export default function MessagesPage() {
         dispatch(clearUnreadMessages());
 
         // Initial fetch of conversations for the list
+        setIsLoading(true);
         getConversations().then((res: any) => {
             dispatch(setConversations(res));
             // Join all conversation rooms via socket
@@ -34,6 +36,8 @@ export default function MessagesPage() {
             }
         }).catch((err) => {
             console.error('Failed to fetch conversations:', err);
+        }).finally(() => {
+            setIsLoading(false);
         });
     }, [dispatch]);
 
@@ -44,7 +48,7 @@ export default function MessagesPage() {
                 "flex-shrink-0 w-full md:w-[320px] lg:w-[360px] h-full flex-col border-r border-gray-100 bg-white",
                 selectedConversationId ? "hidden md:flex" : "flex"
             )}>
-                <ChatList />
+                <ChatList isLoading={isLoading} />
             </div>
 
             {/* Chat Window */}

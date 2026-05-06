@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Users, UserMinus } from 'lucide-react';
+import { Search, Users, UserMinus, Loader2, MessageCircle } from 'lucide-react';
 import { Avatar } from '@/components/common/Avatar';
 import { Conversation } from '../../../types/chat';
 import { cn } from '@/utils/cn';
@@ -11,9 +11,7 @@ import { setSelectedConversation, resetUnread } from '@/store/features/chat/conv
 import { useAppDispatch } from '@/store/hooks';
 
 interface ChatListProps {
-    // conversations: Conversation[];
-    // activeId: string;
-    // onSelect: (id: string) => void;
+    isLoading?: boolean;
 }
 
 const formatLastMessageTime = (dateStr: string | undefined) => {
@@ -39,7 +37,7 @@ const formatLastMessageTime = (dateStr: string | undefined) => {
     }
 };
 
-export const ChatList = () => {
+export const ChatList = ({ isLoading }: ChatListProps) => {
     const dispatch = useAppDispatch();
     const conversations: Conversation[] = useSelector((state: RootState) => {
         const list = state.conversations.allIds.map((id) => state.conversations.byId[id]);
@@ -96,7 +94,21 @@ export const ChatList = () => {
 
             {/* List */}
             <div className="flex-1 overflow-y-auto no-scrollbar pt-2 px-2 pb-2 flex flex-col gap-0.5">
-                {conversations.map((conversation) => {
+                {isLoading ? (
+                    <div className="flex-1 flex flex-col items-center justify-center py-10 gap-3">
+                        <Loader2 className="w-8 h-8 animate-spin text-[var(--color-primary)]" />
+                        <p className="text-xs font-medium text-gray-400">Loading conversations...</p>
+                    </div>
+                ) : conversations.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center py-10 px-6 text-center">
+                        <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-3">
+                            <MessageCircle className="w-6 h-6 text-gray-300" />
+                        </div>
+                        <p className="text-[13px] font-bold text-gray-900">No messages yet</p>
+                        <p className="text-[11px] text-gray-500 mt-1">When you start chatting with people, they will appear here.</p>
+                    </div>
+                ) : (
+                    conversations.map((conversation) => {
                     const isActive = selectedId === conversation?.conversationId;
                     const isOtherOnline = conversation?.type === 'direct' && onlineUsers.includes(conversation?.otherUserId);
 
@@ -177,7 +189,7 @@ export const ChatList = () => {
                             </div>
                         </div>
                     );
-                })}
+                }))}
 
                 {/* End of Chats Marker */}
                 {/* {filteredConversations.length >= 5 && (
