@@ -39,6 +39,28 @@ body {
   /* Firefox */
 }
 
+/* Custom Scrollbar for Chat */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.min-h-0 {
+  min-height: 0;
+}
+
 /* Animations for Login/Signup Background */
 @keyframes wave {
   0% {
@@ -104,4 +126,32 @@ body {
 
 .animate-airplane-fly {
   animation: airplane-fly 25s linear infinite;
+}
+
+/* Toastify Styling */
+.Toastify__toast-container {
+  width: 320px !important;
+  padding: 12px !important;
+}
+
+.Toastify__toast {
+  border-radius: 8px !important;
+  padding: 10px 14px !important;
+  min-height: 52px !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid #f3f4f6 !important;
+  margin-bottom: 8px !important;
+  background: white !important;
+}
+
+.Toastify__toast-body {
+  padding: 0 !important;
+  margin: 0 !important;
+  font-family: inherit !important;
+}
+
+.Toastify__toast-body > div:last-child {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #111827 !important;
 }

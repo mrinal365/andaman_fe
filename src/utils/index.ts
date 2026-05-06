@@ -1,3 +1,5 @@
+import { TOKEN_KEY } from "@/constants";
+
 export const isValidEmail = (email: string): boolean => {
     if (!email) {
         return false
@@ -30,3 +32,43 @@ export const deleteCookie = (name: string) => {
     if (typeof window === 'undefined') return;
     document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
 };
+
+export const getTagStyles = (tag?: string) => {
+    switch (tag) {
+        case 'ad': return 'bg-amber-50 text-amber-600 border-amber-100';
+        default: return 'bg-[var(--color-primary)]/10 text-[var(--color-primary)] border-[var(--color-primary)]/20';
+    }
+};
+
+// export const setAuthCookie = (token: string) => {
+//     setCookie(TOKEN_KEY, token, 7);
+// };
+
+// export const getAuthCookie = () => {
+//     console.log("getcookie", getCookie(TOKEN_KEY))
+//     return getCookie(TOKEN_KEY);
+// };
+
+// export const deleteAuthCookie = () => {
+//     deleteCookie(TOKEN_KEY);
+// };
+
+// utils/image.ts
+export const getImageUrl = (
+    path: string,
+    options?: { w?: number; q?: number }
+) => {
+    const base = process.env.NEXT_PUBLIC_IMAGEKIT_URL;
+
+    const transformations = [
+        options?.w ? `w-${options.w}` : null,
+        options?.q ? `q-${options.q}` : null,
+        "f-webp"
+    ]
+        .filter(Boolean)
+        .join(",");
+
+    return `${base}/${path}?tr=${transformations}`;
+};
+
+

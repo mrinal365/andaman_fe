@@ -1,9 +1,9 @@
 import React from 'react';
 import { cn } from '@/utils/cn';
 
-interface TextProps extends React.HTMLAttributes<HTMLParagraphElement> {
+interface TextProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
     variant?: 'default' | 'error' | 'label' | 'muted';
-    as?: 'p' | 'span' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'label';
+    as?: any;
     children: React.ReactNode;
 }
 
@@ -22,11 +22,12 @@ export const Text: React.FC<TextProps> = ({
     };
 
     return (
-        <div
+        <Component
             className={cn(variants[variant], className)}
             {...props}
         >
             {children}
-        </div>
+        </Component>
     );
 };
+

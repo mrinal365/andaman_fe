@@ -1,40 +1,59 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChatList } from '@/components/messages/ChatList';
 import { ChatWindow } from '@/components/messages/ChatWindow';
-import { MOCK_CONVERSATIONS } from '@/components/messages/data';
 import { cn } from '@/utils/cn';
+import { getConversations } from '@/services/chatServices';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { setConversations } from '@/store/features/chat/conversationSlice';
+import { clearUnreadMessages } from '@/store/features/notificationSlice';
+import { RootState } from '@/store/store';
+import { socket } from '@/utils/socket';
 
 export default function MessagesPage() {
-    const [activeId, setActiveId] = useState<string | null>('1');
+    const dispatch = useAppDispatch();
+    const conversations = useAppSelector((state: RootState) => state.conversations);
+    const selectedConversationId = conversations.selectedConversationId;
 
-    const activeConversation = MOCK_CONVERSATIONS.find(c => c.id === activeId);
+    const activeConversation = selectedConversationId ? conversations.byId[selectedConversationId] : null;
+
+    useEffect(() => {
+        // Clear unread message badge when entering messages page
+        dispatch(clearUnreadMessages());
+
+        // Initial fetch of conversations for the list
+        getConversations().then((res: any) => {
+            dispatch(setConversations(res));
+            // Join all conversation rooms via socket
+            const chats: any = res?.conversations || res;
+            if (Array.isArray(chats)) {
+                chats.forEach((convo: any) => {
+                    socket.emit('join_conversation', convo.conversationId);
+                });
+            }
+        }).catch((err) => {
+            console.error('Failed to fetch conversations:', err);
+        });
+    }, [dispatch]);
 
     return (
         <div className="flex w-full h-full overflow-hidden bg-white">
             {/* Chat List */}
             <div className={cn(
                 "flex-shrink-0 w-full md:w-[320px] lg:w-[360px] h-full flex-col border-r border-gray-100 bg-white",
-                activeId ? "hidden md:flex" : "flex"
+                selectedConversationId ? "hidden md:flex" : "flex"
             )}>
-                <ChatList
-                    conversations={MOCK_CONVERSATIONS}
-                    activeId={activeId || ''}
-                    onSelect={setActiveId}
-                />
+                <ChatList />
             </div>
 
             {/* Chat Window */}
             <div className={cn(
                 "flex-1 h-full flex-col bg-white",
-                activeId ? "flex" : "hidden md:flex"
+                selectedConversationId ? "flex" : "hidden md:flex"
             )}>
                 {activeConversation ? (
-                    <ChatWindow
-                        conversation={activeConversation}
-                        onBack={() => setActiveId(null)}
-                    />
+                    <ChatWindow />
                 ) : (
                     <div className="flex-1 flex items-center justify-center text-gray-400 text-sm font-medium">
                         Select a conversation to start chatting

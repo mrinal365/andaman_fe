@@ -1,206 +1,410 @@
 'use client'
+
+import { Post } from '../../../types/post';
+
+import { useState, useEffect, useRef } from 'react';
+import { Heart, MessageCircle, Bookmark, BadgeCheck, Eye, Share2 } from 'lucide-react';
+import { toast } from 'react-toastify';
+import Link from 'next/link';
+
+import { likeUnlikePost, savePost, recordView } from '@/services/feedService';
+import { followUser, unfollowUser } from '@/services/userService';
+import { INTERACTION_TYPE } from '@/constants';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { getTagStyles } from '@/utils';
+import { cn } from '@/utils/cn';
+import { toggleLikeOptimistic, toggleSavedOptimistic } from '@/store/features/postSlice';
+import { VideoPlayer } from './VideoPlayer';
+import { PostDetailModal } from './PostDetailModal';
+
 import { Avatar } from '@/components/common/Avatar';
 import { Card } from '@/components/common/Card';
 import { SafeImage } from '@/components/common/SafeImage';
-import { MoreHorizontal, Heart, MessageCircle, Send, Bookmark, BadgeCheck, Eye } from 'lucide-react';
-import { VideoPlayer } from './VideoPlayer';
+import { LikesModal } from '@/components/common/LikesModal';
 
-interface FeedPostProps {
-    author: {
-        name: string;
-        avatar: string;
-        location: string;
-        time: string;
-        verified?: boolean;
-    };
-    content: {
-        text: string;
-        image?: string;
-        images?: string[];
-        video?: string; // Added video support
-        tag?: 'post' | 'guide' | 'news' | 'ad' | 'update';
-        likes: string;
-        comments: string;
-        views: string;
-        commentsList?: { user: string; text: string }[];
-    };
-}
+export const FeedPost = ({ post }: { post: Post }) => {
+    const postImages = post?.images?.length ? post.images : [];
 
-const getTagStyles = (tag?: string) => {
-    switch (tag) {
-        case 'ad': return 'bg-amber-50 text-amber-600 border-amber-100';
-        default: return 'bg-[var(--color-primary)]/10 text-[var(--color-primary)] border-[var(--color-primary)]/20';
-    }
-};
+    const dispatch = useAppDispatch();
+    const currentUser = useAppSelector(state => state.user.user);
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
+    const [isLikesModalOpen, setIsLikesModalOpen] = useState(false);
+    const [focusComments, setFocusComments] = useState(false);
+    const [isFollowLoading, setIsFollowLoading] = useState(false);
+    const [isFollowing, setIsFollowing] = useState(post?.viewerState?.followingAuthor);
 
-export const FeedPost = ({ author, content }: FeedPostProps) => {
-    const postImages = content.images || (content.image ? [content.image] : []);
+    const authorId = post.authorId?._id || post.authorId;
+    const isOwnPost = currentUser?.id === authorId;
+    const authorHandle = post.authorId?.handle || (isOwnPost ? currentUser?.handle : '');
 
+
+    const postId = post.id;
+
+    // View tracking refs
+    const hasViewedRef = useRef(false);
+    const viewTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const observerRef = useRef<IntersectionObserver | null>(null);
+    const postRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleIntersect = (entries: IntersectionObserverEntry[]) => {
+            const [entry] = entries;
+
+            // Clear existing timer if any
+            if (viewTimerRef.current) {
+                clearTimeout(viewTimerRef.current);
+                viewTimerRef.current = null;
+            }
+
+            // If significantly visible and hasn't been viewed this session
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.6 && !hasViewedRef.current) {
+                viewTimerRef.current = setTimeout(() => {
+                    // Final check: Is tab still focused?
+                    if (document.visibilityState === 'visible') {
+                        hasViewedRef.current = true;
+                        recordView(postId).catch(() => {
+                            // Silently fail if view recording fails, 
+                            // maybe reset flag so it tries again later?
+                            hasViewedRef.current = false;
+                        });
+                    }
+                }, 1000); // 1s dwell time
+            }
+        };
+
+        const currentRef = postRef.current;
+        if (currentRef) {
+            observerRef.current = new IntersectionObserver(handleIntersect, {
+                threshold: [0, 0.6, 1.0]
+            });
+            observerRef.current.observe(currentRef);
+        }
+
+        return () => {
+            if (observerRef.current && currentRef) {
+                observerRef.current.unobserve(currentRef);
+            }
+            if (viewTimerRef.current) {
+                clearTimeout(viewTimerRef.current);
+            }
+        };
+    }, [postId]);
+
+    // =====================
+    // IMAGE GRID LAYOUTS
+    // =====================
     const renderImageGrid = () => {
-        // If it's a video post, don't render images
-        if (content.video) return null;
-
         if (postImages.length === 0) return null;
 
         if (postImages.length === 1) {
             return (
-                <div className="relative w-full rounded-xl overflow-hidden mt-1 shadow-sm group border border-gray-100/50">
+                <div className="relative w-full rounded-xl overflow-hidden mt-1 shadow-sm border border-gray-100/50 bg-black/5">
                     <SafeImage
                         src={postImages[0]}
                         alt="Post content"
-                        width={600}
-                        height={800}
-                        className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
+                        width={1200}
+                        height={1200}
+                        className="w-full h-auto max-h-[750px] object-contain block"
                     />
                 </div>
             );
         }
 
-        // Logic for 2 or 3 images: Show 2, with +1 on the second if length is 3
-        if (postImages.length === 2 || postImages.length === 3) {
+        if (postImages.length === 2) {
             return (
-                <div className="grid grid-cols-2 gap-1 rounded-xl overflow-hidden mt-1 border border-gray-100/50">
-                    {postImages.slice(0, 2).map((img, i) => (
-                        <div key={i} className="relative aspect-square">
-                            <SafeImage src={img} alt={`Image ${i + 1}`} fill className="object-cover" />
-                            {i === 1 && postImages.length > 2 && (
-                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-[2px]">
-                                    <span className="text-white text-3xl font-bold">+{postImages.length - 2}</span>
-                                </div>
-                            )}
+                <div className="grid grid-cols-2 gap-1 rounded-xl overflow-hidden mt-1 shadow-sm border border-gray-100/50">
+                    {postImages.map((img: string, i: number) => (
+                        <div key={i} className="relative aspect-square bg-black/5">
+                            <SafeImage
+                                src={img}
+                                alt={`Image ${i + 1}`}
+                                width={600}
+                                height={600}
+                                className="w-full h-full object-cover block"
+                            />
                         </div>
                     ))}
                 </div>
             );
         }
 
-        // Logic for 4+ images: Show 4, with +N on the fourth
-        if (postImages.length >= 4) {
+        if (postImages.length === 3) {
             return (
-                <div className="grid grid-cols-2 gap-1 rounded-xl overflow-hidden mt-1 border border-gray-100/50 aspect-square">
-                    {postImages.slice(0, 4).map((img, i) => (
-                        <div key={i} className="relative h-full w-full">
-                            <SafeImage src={img} alt={`Image ${i + 1}`} fill className="object-cover" />
-                            {i === 3 && postImages.length > 4 && (
-                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-[2px]">
-                                    <span className="text-white text-3xl font-bold">+{postImages.length - 4}</span>
-                                </div>
-                            )}
-                        </div>
-                    ))}
+                <div className="grid grid-cols-3 grid-rows-2 gap-1 rounded-xl overflow-hidden mt-1 shadow-sm border border-gray-100/50 h-[300px] md:h-[360px]">
+                    <div className="row-span-2 col-span-2 bg-black/5">
+                        <SafeImage
+                            src={postImages[0]}
+                            alt="Image 1"
+                            width={800}
+                            height={800}
+                            className="w-full h-full object-cover block"
+                        />
+                    </div>
+                    <div className="bg-black/5">
+                        <SafeImage
+                            src={postImages[1]}
+                            alt="Image 2"
+                            width={400}
+                            height={400}
+                            className="w-full h-full object-cover block"
+                        />
+                    </div>
+                    <div className="bg-black/5">
+                        <SafeImage
+                            src={postImages[2]}
+                            alt="Image 3"
+                            width={400}
+                            height={400}
+                            className="w-full h-full object-cover block"
+                        />
+                    </div>
                 </div>
             );
         }
 
-        return null;
+        // 4 or more — 2×2 grid, last cell shows "+N" if more than 4
+        const gridImages = postImages.slice(0, 4);
+        const extraCount = postImages.length - 4;
+
+        return (
+            <div className="grid grid-cols-2 gap-1 rounded-xl overflow-hidden mt-1 shadow-sm border border-gray-100/50">
+                {gridImages.map((img: string, i: number) => (
+                    <div key={i} className="relative aspect-square bg-black/5">
+                        <SafeImage
+                            src={img}
+                            alt={`Image ${i + 1}`}
+                            width={600}
+                            height={600}
+                            className="w-full h-full object-cover block"
+                        />
+                        {/* "+N more" overlay on last cell */}
+                        {i === 3 && extraCount > 0 && (
+                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                <span className="text-white text-2xl font-bold">+{extraCount}</span>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+        );
+    };
+
+
+
+    const handleFollowToggle = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!currentUser) {
+            toast.error('Please login to follow users');
+            return;
+        }
+        if (!post?.authorId?._id) return;
+        try {
+            setIsFollowLoading(true);
+            if (isFollowing) {
+                await unfollowUser(post.authorId._id);
+                setIsFollowing(false);
+                toast.success(`Unfollowed ${post.authorId.name}`);
+            } else {
+                await followUser(post.authorId._id);
+                setIsFollowing(true);
+                toast.success(`You followed ${post.authorId.name}`);
+            }
+        } catch (err) {
+            toast.error('Action failed');
+        } finally {
+            setIsFollowLoading(false);
+        }
+    };
+
+    const addInteraction = (type: string, e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        switch (type) {
+            case INTERACTION_TYPE.LIKE:
+                dispatch(toggleLikeOptimistic(postId));
+                likeUnlikePost(post._id).then((res) => {
+                    toast.success(res.message);
+                }).catch((err) => {
+                    // rollback on failure
+                    dispatch(toggleLikeOptimistic(postId));
+                    toast.error(err.message);
+                });
+                break;
+            case INTERACTION_TYPE.SAVE:
+                dispatch(toggleSavedOptimistic(postId));
+                savePost(post._id).then((res: any) => {
+                    toast.success(res.saved ? 'Post saved' : 'Post unsaved');
+                }).catch((err: any) => {
+                    // rollback on failure
+                    dispatch(toggleSavedOptimistic(postId));
+                    toast.error(err.message || 'Failed to save');
+                });
+                break;
+        }
     };
 
     return (
-        <Card className="flex flex-col gap-2 p-3 md:p-4" padding="none">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <Avatar src={author.avatar} size="md" />
-                    <div>
-                        <div className="flex items-center gap-1">
-                            <h4 className="font-bold text-sm text-gray-900 leading-none">{author.name}</h4>
-                            {author.verified && (
-                                <BadgeCheck className="h-[14px] w-[14px] text-[var(--color-primary)] fill-[var(--color-primary)]/10" />
-                            )}
+        <div ref={postRef}>
+            <Card
+                className="flex flex-col gap-2 p-3 md:p-4 cursor-pointer hover:shadow-lg transition-shadow duration-200"
+                padding="none"
+                onClick={() => setIsDetailOpen(true)}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <Avatar
+                            name={post?.authorId?.name || (isOwnPost ? currentUser?.name : '')}
+                            src={post?.authorId?.avatar || (isOwnPost ? currentUser?.avatar : 'https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250')}
+                            handle={authorHandle}
+                            size="md"
+                        />
+                        <div>
+                            <div className="flex items-center gap-1">
+                                <Link
+                                    href={`/u/${authorHandle}`}
+                                    className="font-bold text-sm text-gray-900 leading-none hover:underline"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    {post?.authorId?.name || (isOwnPost ? currentUser?.name : 'demo author')}
+                                </Link>
+                                {post?.authorId?.verified && (
+                                    <BadgeCheck className="h-[14px] w-[14px] text-green-700 fill-green-700/30" />
+                                )}
+                            </div>
+                            <p className="text-xs text-gray-500 font-medium mt-0.5">
+                                {new Date(post?.createdAt).toLocaleString()}
+                                {/* {post?.location && ` • ${post?.location}`} */}
+                            </p>
                         </div>
-                        <p className="text-xs text-gray-500 font-medium mt-0.5">
-                            {author.time}
-                            {author.location && ` • ${author.location}`}
-                        </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        {!isOwnPost && (
+                            <button
+                                onClick={handleFollowToggle}
+                                disabled={isFollowLoading}
+                                className={cn(
+                                    "text-[12px] font-bold px-3 py-1 rounded-lg transition-all",
+                                    isFollowing
+                                        ? "text-gray-400 hover:text-gray-600"
+                                        : "text-[var(--color-primary)] hover:bg-blue-50"
+                                )}
+                            >
+                                {isFollowLoading ? "..." : isFollowing ? "Following" : "Follow"}
+                            </button>
+                        )}
+                        {post?.type && (
+                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border ${getTagStyles(post?.type)}`}>
+                                {post.type}
+                            </span>
+                        )}
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    {content.tag && (
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border ${getTagStyles(content.tag)}`}>
-                            {content.tag}
-                        </span>
-                    )}
 
-                </div>
-            </div>
-
-            <p className="text-[14px] text-gray-800 leading-relaxed font-normal">
-                {content.text.split(' ').map((word, i) =>
-                    word.startsWith('#') ? <span key={i} className="text-[var(--color-primary)] font-semibold">{word} </span> : word + ' '
+                {/* Text */}
+                {post?.feed?.title && (
+                    <p className="text-[14px] text-gray-800 leading-relaxed font-bold">{post.feed.title}</p>
                 )}
-            </p>
+                <p className="text-[14px] text-gray-800 leading-relaxed font-normal">
+                    {post?.feed?.previewText?.split(' ')?.map((word: string, i: number) =>
+                        word.startsWith('#') ? <span key={i} className="text-[var(--color-primary)] font-semibold">{word} </span> : word + ' '
+                    )}
+                </p>
 
-            {/* Content: Video OR Images */}
-            {content.video ? (
-                <VideoPlayer url={content.video} />
-            ) : (
-                renderImageGrid()
-            )}
+                {/* Content: Video OR Image Grid */}
+                {/* {post?.video ? (
+                    <VideoPlayer url={post?.video} />
+                ) : ( */}
+                {renderImageGrid()}
+                {/* )} */}
 
-            {/* Actions */}
-            <div className="flex items-center justify-between mt-0.5">
-                <div className="flex items-center gap-1">
-                    {/* Like */}
-                    <button className="flex items-center gap-1.5 group p-1.5 -ml-1.5 rounded-full hover:bg-[var(--color-primary)]/10 transition-all active:scale-95">
-                        <Heart className="h-[20px] w-[20px] text-gray-500 stroke-[1.5] group-hover:text-[var(--color-primary)] group-hover:fill-[var(--color-primary)] transition-colors" />
-                        <span className="text-[13px] font-semibold text-gray-500 group-hover:text-[var(--color-primary)] tabular-nums">{content.likes}</span>
-                    </button>
-
-                    {/* Comment */}
-                    <button className="flex items-center gap-1.5 group p-1.5 rounded-full hover:bg-blue-50/60 transition-all active:scale-95">
-                        <MessageCircle className="h-[20px] w-[20px] text-gray-500 stroke-[1.5] group-hover:text-blue-500 transition-colors" />
-                        <span className="text-[13px] font-semibold text-gray-500 group-hover:text-blue-600 tabular-nums">{content.comments}</span>
-                    </button>
-
-                    {/* Views */}
-                    <button className="flex items-center gap-1.5 group p-1.5 rounded-full hover:bg-gray-100/60 transition-all active:scale-95">
-                        <Eye className="h-[20px] w-[20px] text-gray-500 stroke-[1.5] group-hover:text-gray-900 transition-colors" />
-                        <span className="text-[13px] font-semibold text-gray-500 group-hover:text-gray-900 tabular-nums">{content.views}</span>
-                    </button>
-                </div>
-
-                <div className="flex items-center gap-1">
-                    {/* Share */}
-                    <button className="flex items-center gap-1.5 group p-1.5 rounded-full hover:bg-green-50/60 transition-all active:scale-95">
-                        <Send className="h-[20px] w-[20px] text-gray-500 stroke-[1.5] group-hover:text-green-600 -rotate-12 translate-y-0.5 transition-colors" />
-                    </button>
-
-                    {/* Bookmark */}
-                    <button className="group p-1.5 -mr-1.5 rounded-full hover:bg-gray-100/60 transition-all active:scale-95">
-                        <Bookmark className="h-[20px] w-[20px] text-gray-500 stroke-[1.5] group-hover:text-gray-900 transition-colors" />
-                    </button>
-                </div>
-            </div>
-
-            {/* Comment Input */}
-            <div className="flex items-center gap-3 pt-3 mt-1 border-t border-gray-100">
-                <Avatar src="https://i.pravatar.cc/150?u=me" size="sm" />
-                <div className="flex-1 bg-gray-50 rounded-xl pl-3 pr-2 py-2 flex items-center justify-between group focus-within:bg-white focus-within:ring-1 focus-within:ring-gray-200 transition-all">
-                    <input
-                        type="text"
-                        placeholder="Add a comment..."
-                        className="bg-transparent border-none outline-none text-sm w-full placeholder:text-gray-400 text-gray-800"
-                    />
-                    <button className="text-gray-400 hover:text-gray-800 p-1.5 rounded-full hover:bg-gray-100 transition-colors">
-                        <Send className="h-4 w-4 stroke-[2.5]" />
-                    </button>
-                </div>
-            </div>
-
-            {/* Footer Comments */}
-            {content.commentsList && content.commentsList.length > 0 && (
-                <div className="mt-2 space-y-1.5">
-                    <button className="text-[13px] text-gray-500 font-medium mb-1 hover:text-gray-800 transition-colors block">
-                        View more comments
-                    </button>
-                    {content.commentsList.map((comment, i) => (
-                        <div key={i} className="flex items-start gap-2 text-[13px]">
-                            <span className="font-bold text-gray-900 shrink-0">{comment.user}</span>
-                            <span className="text-gray-600 font-medium">{comment.text}</span>
+                {/* Actions */}
+                <div className="flex items-center justify-between mt-0.5">
+                    <div className="flex items-center gap-1">
+                        {/* Like */}
+                        <div className="flex items-center gap-1.5 p-1.5 -ml-1.5 rounded-md hover:bg-gray-100/60 transition-all">
+                            <button
+                                onClick={(e) => addInteraction(INTERACTION_TYPE.LIKE, e)}
+                                className="active:scale-95"
+                            >
+                                <Heart
+                                    className={`h-[20px] w-[20px] stroke-[1.5] transition-colors 
+                                    ${post?.viewerState?.liked ? 'text-[var(--color-primary)] fill-[var(--color-primary)]' : 'text-gray-500 stroke-[1.5]'}`}
+                                />
+                            </button>
+                            {isOwnPost ? (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsLikesModalOpen(true);
+                                    }}
+                                    className="text-[13px] font-semibold text-gray-500 hover:text-[var(--color-primary)] hover:underline tabular-nums"
+                                >
+                                    {post?.stats?.likeCount}
+                                </button>
+                            ) : (
+                                <span className="text-[13px] font-semibold text-gray-500 tabular-nums">
+                                    {post?.stats?.likeCount}
+                                </span>
+                            )}
                         </div>
-                    ))}
+
+                        {/* Comment count */}
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setFocusComments(true); setIsDetailOpen(true); }}
+                            className="flex items-center gap-1.5 group p-1.5 rounded-md hover:bg-gray-100/60 transition-all active:scale-95"
+                        >
+                            <MessageCircle className="h-[20px] w-[20px] stroke-[1.5] text-gray-500 transition-colors" />
+                            <span className="text-[13px] font-semibold text-gray-500 tabular-nums">
+                                {post?.stats?.commentCount || 0}
+                            </span>
+                        </button>
+
+                        {/* Views */}
+                        <button
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center gap-1.5 group p-1.5 rounded-md hover:bg-gray-100/60 transition-all active:scale-95"
+                        >
+                            <Eye className="h-[20px] w-[20px] text-gray-500 stroke-[1.5] transition-colors" />
+                            <span className="text-[13px] font-semibold text-gray-500 tabular-nums">{post?.stats?.viewCount || 0}</span>
+                        </button>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                        {/* Share */}
+                        <button
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center gap-1.5 group p-1.5 rounded-full hover:bg-green-50/60 transition-all active:scale-95"
+                        >
+                            <Share2 className="h-[20px] w-[20px] text-gray-500 stroke-[1.5] group-hover:text-green-600 translate-y-0.5 transition-colors" />
+                        </button>
+
+                        {/* Bookmark */}
+                        <button
+                            onClick={(e) => addInteraction(INTERACTION_TYPE.SAVE, e)}
+                            className="group p-1.5 -mr-1.5 rounded-full hover:bg-gray-100/60 transition-all active:scale-95"
+                        >
+                            <Bookmark className={post?.viewerState?.saved ? 'h-[20px] w-[20px] text-gray-500 stroke-[1.5] fill-black' : 'h-[20px] w-[20px] text-gray-500 stroke-[1.5]'} />
+                        </button>
+                    </div>
                 </div>
+            </Card>
+
+            {/* Post Detail Modal / Drawer */}
+            <PostDetailModal
+                post={post}
+                isOpen={isDetailOpen}
+                onClose={() => { setIsDetailOpen(false); setFocusComments(false); }}
+                scrollToComments={focusComments}
+            />
+
+            {/* Likes List Modal (Author only) */}
+            {isOwnPost && (
+                <LikesModal
+                    postId={postId}
+                    isOpen={isLikesModalOpen}
+                    onClose={() => setIsLikesModalOpen(false)}
+                />
             )}
-        </Card>
+        </div>
     );
 };

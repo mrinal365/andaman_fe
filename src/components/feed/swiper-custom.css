@@ -1,0 +1,67 @@
+.swiper-pagination-bullet {
+    background: white !important;
+    opacity: 0.5 !important;
+    width: 6px !important;
+    height: 6px !important;
+    transition: all 0.3s ease !important;
+}
+
+.swiper-pagination-bullet-active {
+    opacity: 1 !important;
+}
+
+.swiper-pagination {
+    bottom: 12px !important;
+}
+
+/* Custom Swiper Navigation Arrows (Instagram Style) */
+.swiper-button-next,
+.swiper-button-prev {
+    color: #4b5563 !important;
+    /* dark grey icon */
+    background-color: #e5e7eb !important;
+    /* solid light grey background */
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 50% !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    opacity: 0.9 !important;
+    /* Always visible */
+    transition: transform 0.1s ease, opacity 0.2s ease !important;
+    margin-top: -12px !important;
+    /* Center vertically */
+}
+
+/* Adjust distance from edges */
+.swiper-button-prev {
+    left: 8px !important;
+}
+
+.swiper-button-next {
+    right: 8px !important;
+}
+
+.swiper-button-next::after,
+.swiper-button-prev::after {
+    font-size: 11px !important;
+    font-weight: 900 !important;
+}
+
+.swiper-button-next:active,
+.swiper-button-prev:active {
+    transform: scale(0.9) !important;
+}
+
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+    opacity: 1 !important;
+}
+
+/* Hide navigation buttons when they are disabled (start/end of slide) */
+.swiper-button-disabled {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}

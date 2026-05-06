@@ -1,56 +1,47 @@
-// import { config } from '@/config';
-// import { cookies } from 'next/headers';
-// import { redirect } from 'next/navigation';
+'use client'
 
-// export default async function TokenLayout({
-//     children,
-// }: {
-//     children: React.ReactNode;
-// }) {
-//     const cookieStore = await cookies();   // ✅ IMPORTANT
-//     const token = cookieStore.get('token')?.value;
+import Loader from "@/components/common/Loading";
+import { getCurrentUser } from "@/services/authService";
+import { updateUserInfo } from "@/store/features/userSlice";
+import { useAppDispatch } from "@/store/hooks";
+import { useEffect, useState } from "react";
+import { AppProviders } from "@/components/providers/AppProviders";
+import { User } from "../../../types/user";
 
-//     if (!token) {
-//         redirect('/login');
-//     }
-
-//     // const res = await fetch(`${config.api.baseUrl}/auth/me`, {
-//     //     headers: {
-//     //         Authorization: `Bearer ${token}`,
-//     //     },
-//     //     cache: 'no-store',
-//     // });
-
-//     if (!res.ok) {
-//         redirect('/login?error=session_expired');
-//     }
-
-//     return <>{children}</>;
-// }
-
-
-
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
-import { getMeSSR } from '@/services/authServiceServer';
-
-export default async function TokenLayout({
+export default function TokenLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
+    const dispatch = useAppDispatch();
+    const [isLoading, setIsLoading] = useState(true);
 
-    if (!token) {
-        redirect('/login');
+    useEffect(() => {
+        getCurrentUser()
+            .then((res: any) => {
+                const user: User = res?.data || res;
+                if (user && user._id && !user.id) {
+                    user.id = user._id;
+                }
+                dispatch(updateUserInfo(user));
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+            .finally(() => {
+                setIsLoading(false);
+            });
+    }, [])
+
+    if (isLoading) {
+        return (
+            <Loader text="Checking user..." />
+        );
     }
 
-    const isValid = await getMeSSR(token);
-
-    if (!isValid) {
-        redirect('/login?error=session_expired');
-    }
-
-    return <>{children}</>;
+    return (
+        <AppProviders>
+            {children}
+        </AppProviders>
+    );
 }

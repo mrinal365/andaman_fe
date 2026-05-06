@@ -27,7 +27,7 @@ export const Button: React.FC<ButtonProps> = ({
 
     const variants = {
         primary: "bg-white text-black hover:bg-neutral-200 shadow-sm",
-        outline: "bg-transparent border border-neutral-700 text-white hover:bg-neutral-800 shadow-lg"
+        outline: "bg-transparent border border-neutral-700 text-black hover:text-white hover:bg-neutral-800 shadow-lg"
     };
 
     return (

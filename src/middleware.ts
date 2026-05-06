@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { config as appConfig } from '@/config';
+import { TOKEN_KEY } from './constants';
+import { getCookie } from './utils';
 
 // Define public paths that don't require authentication
 const publicPaths = ['/login', '/signup'];
@@ -15,7 +17,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Get token from cookies (assuming 'token' is the cookie name)
-    const token = request.cookies.get('token')?.value;
+    const token = request.cookies.get(TOKEN_KEY)?.value;
 
     if (!token) {
         // No token found, redirect to login

@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ToastContainer } from 'react-toastify';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import 'react-toastify/dist/ReactToastify.css';
 import "./globals.css";
+import StoreProvider from "@/components/providers/StoreProvider";
+// import { ChatNotificationProvider } from "@/components/chat/ChatNotificationProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,12 +28,29 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
-        <ToastContainer theme="dark" position="bottom-right" />
+        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}>
+          <StoreProvider>
+            {/* <ChatNotificationProvider> */}
+            {children}
+            {/* </ChatNotificationProvider> */}
+            <ToastContainer
+              theme="light"
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={true}
+              newestOnTop={true}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
+          </StoreProvider>
+        </GoogleOAuthProvider>
       </body>
     </html>
   );

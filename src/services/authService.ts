@@ -1,5 +1,6 @@
 import api from './api';
-import { LoginCredentials, SignupData, AuthResponse, User } from '@/interfaces/auth';
+import { LoginCredentials, SignupData, AuthResponse } from '../../types/auth';
+import { User } from '../../types/user';
 
 export const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
     const response = await api.post<AuthResponse>('/auth/login', credentials);

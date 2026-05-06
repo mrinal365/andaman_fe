@@ -17,7 +17,7 @@ export const SafeImage = (props: ImageProps) => {
     if (error) {
         return (
             <div
-                className={`flex flex-col items-center justify-center bg-gray-100 text-gray-400 gap-2 ${props.className} ${props.fill ? 'absolute inset-0 w-full h-full' : 'w-full h-full'}`}
+                className={`flex flex-col items-center justify-center bg-gray-100 text-gray-400 gap-2 aspect-square ${props.className} ${props.fill ? 'absolute inset-0 w-full h-full' : 'w-full h-full'}`}
             >
                 <ImageOff className="h-8 w-8 opacity-40 stroke-[1.5]" />
                 <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Image Broken</span>
@@ -33,8 +33,8 @@ export const SafeImage = (props: ImageProps) => {
     }
 
     return (
-        <Image
-            {...props}
+        <img
+            {...props as any}
             key={attempt}
             onError={() => setError(true)}
         />
