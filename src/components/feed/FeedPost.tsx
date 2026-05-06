@@ -41,9 +41,10 @@ export const FeedPost = ({ post }: { post: Post }) => {
     const [isTagHovered, setIsTagHovered] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
-    const authorId = post.authorId?._id || post.authorId;
+    const authorData = post.author || post.authorId;
+    const authorId = authorData?._id || authorData;
     const isOwnPost = currentUser?.id === authorId;
-    const authorHandle = post.authorId?.handle || (isOwnPost ? currentUser?.handle : '');
+    const authorHandle = authorData?.handle || (isOwnPost ? currentUser?.handle : '');
 
 
     const postId = post.id;
@@ -238,17 +239,17 @@ export const FeedPost = ({ post }: { post: Post }) => {
             toast.error('Please login to follow users');
             return;
         }
-        if (!post?.authorId?._id) return;
+        if (!authorData?._id) return;
         try {
             setIsFollowLoading(true);
             if (isFollowing) {
-                await unfollowUser(post.authorId._id);
+                await unfollowUser(authorData._id);
                 setIsFollowing(false);
-                toast.success(`Unfollowed ${post.authorId.name}`);
+                toast.success(`Unfollowed ${authorData.name}`);
             } else {
-                await followUser(post.authorId._id);
+                await followUser(authorData._id);
                 setIsFollowing(true);
-                toast.success(`You followed ${post.authorId.name}`);
+                toast.success(`You followed ${authorData.name}`);
             }
         } catch (err) {
             toast.error('Action failed');
@@ -294,8 +295,8 @@ export const FeedPost = ({ post }: { post: Post }) => {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <Avatar
-                            name={post?.authorId?.name || (isOwnPost ? currentUser?.name : '')}
-                            src={post?.authorId?.avatar || (isOwnPost ? currentUser?.avatar : 'https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250')}
+                            name={authorData?.name || (isOwnPost ? currentUser?.name : '')}
+                            src={authorData?.avatar || (isOwnPost ? currentUser?.avatar : 'https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250')}
                             handle={authorHandle}
                             size="md"
                         />
@@ -306,9 +307,9 @@ export const FeedPost = ({ post }: { post: Post }) => {
                                     className="font-bold text-sm text-gray-900 leading-none hover:underline"
                                     onClick={(e) => e.stopPropagation()}
                                 >
-                                    {post?.authorId?.name || (isOwnPost ? currentUser?.name : 'demo author')}
+                                    {authorData?.name || (isOwnPost ? currentUser?.name : 'demo author')}
                                 </Link>
-                                {post?.authorId?.verified && (
+                                {authorData?.verified && (
                                     <BadgeCheck className="h-[14px] w-[14px] text-green-700 fill-green-700/30" />
                                 )}
                                 {post?.taggedUsers && post.taggedUsers.length > 0 && (

@@ -34,6 +34,7 @@ export interface Post {
     _id: string;
     // authorId: string;
     authorId: PostAuthor;
+    author?: PostAuthor;
     content: string;
     images: string[];
     type: "text" | "image" | "video";

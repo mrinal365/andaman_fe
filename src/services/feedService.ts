@@ -58,6 +58,11 @@ export const getPostLikes = async (postId: string): Promise<any> => {
     const response = await api.get<any>(`/posts/${postId}/likes`);
     return response.data;
 };
+
+export const getPostById = async (postId: string): Promise<Post> => {
+    const response = await api.get<any>(`/posts/${postId}`);
+    return response.data;
+};
 export const createPost = async (post: any): Promise<any> => {
     const response = await api.post<any>('/posts', post);
     return response.data;
