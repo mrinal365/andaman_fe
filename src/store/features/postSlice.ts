@@ -131,6 +131,11 @@ const postsSlice = createSlice({
         //     });
         // },
 
+        deletePostOptimistic(state, action: PayloadAction<string>) {
+            const postId = action.payload;
+            delete state.byId[postId];
+            state.feedIds = state.feedIds.filter(id => id !== postId);
+        },
         resetFeed(state) {
             state.byId = {};
             state.feedIds = [];
@@ -150,7 +155,8 @@ export const {
     // addCommentListInPost
     appendFeed,
     addPostOptimistic,
-    increaseCommentCount
+    increaseCommentCount,
+    deletePostOptimistic
 } = postsSlice.actions;
 
 export default postsSlice.reducer;

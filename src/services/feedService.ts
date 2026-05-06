@@ -105,3 +105,7 @@ export const recordView = async (postId: string): Promise<any> => {
 //     const response = await api.get<User>('/auth/me');
 //     return response.data;
 // };
+export const deletePost = async (postId: string): Promise<any> => {
+    const response = await api.delete<any>(`/posts/${postId}`);
+    return response.data;
+};

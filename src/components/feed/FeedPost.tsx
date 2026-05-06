@@ -3,17 +3,17 @@
 import { Post } from '../../../types/post';
 
 import { useState, useEffect, useRef } from 'react';
-import { Heart, MessageCircle, Bookmark, BadgeCheck, Eye, Share2 } from 'lucide-react';
+import { Heart, MessageCircle, Bookmark, BadgeCheck, Eye, Share2, MoreVertical, Trash2, AlertCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
 
-import { likeUnlikePost, savePost, recordView } from '@/services/feedService';
+import { likeUnlikePost, savePost, recordView, deletePost } from '@/services/feedService';
 import { followUser, unfollowUser } from '@/services/userService';
 import { INTERACTION_TYPE } from '@/constants';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { getTagStyles } from '@/utils';
 import { cn } from '@/utils/cn';
-import { toggleLikeOptimistic, toggleSavedOptimistic } from '@/store/features/postSlice';
+import { toggleLikeOptimistic, toggleSavedOptimistic, deletePostOptimistic } from '@/store/features/postSlice';
 import { VideoPlayer } from './VideoPlayer';
 import { PostDetailModal } from './PostDetailModal';
 
@@ -21,6 +21,8 @@ import { Avatar } from '@/components/common/Avatar';
 import { Card } from '@/components/common/Card';
 import { SafeImage } from '@/components/common/SafeImage';
 import { LikesModal } from '@/components/common/LikesModal';
+import { Modal } from '@/components/common/Modal';
+import { Button } from '@/components/common/Button';
 
 export const FeedPost = ({ post }: { post: Post }) => {
     const postImages = post?.images?.length ? post.images : [];
@@ -32,6 +34,10 @@ export const FeedPost = ({ post }: { post: Post }) => {
     const [focusComments, setFocusComments] = useState(false);
     const [isFollowLoading, setIsFollowLoading] = useState(false);
     const [isFollowing, setIsFollowing] = useState(post?.viewerState?.followingAuthor);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
 
     const authorId = post.authorId?._id || post.authorId;
     const isOwnPost = currentUser?.id === authorId;
@@ -89,6 +95,36 @@ export const FeedPost = ({ post }: { post: Post }) => {
             }
         };
     }, [postId]);
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsMenuOpen(false);
+            }
+        };
+
+        if (isMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isMenuOpen]);
+
+    const handleDeletePost = async () => {
+        try {
+            setIsDeleting(true);
+            await deletePost(postId);
+            dispatch(deletePostOptimistic(postId));
+            toast.success("Post deleted successfully");
+            setIsDeleteModalOpen(false);
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to delete post");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
 
     // =====================
     // IMAGE GRID LAYOUTS
@@ -300,6 +336,36 @@ export const FeedPost = ({ post }: { post: Post }) => {
                                 {post.type}
                             </span>
                         )}
+
+                        {isOwnPost && (
+                            <div className="relative" ref={menuRef}>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsMenuOpen(!isMenuOpen);
+                                    }}
+                                    className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+                                >
+                                    <MoreVertical size={18} />
+                                </button>
+
+                                {isMenuOpen && (
+                                    <div className="absolute right-0 mt-1 w-40 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-200">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setIsMenuOpen(false);
+                                                setIsDeleteModalOpen(true);
+                                            }}
+                                            className="w-full px-4 py-2 text-left text-sm font-bold text-red-500 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                                        >
+                                            <Trash2 size={16} />
+                                            <span>Delete Post</span>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -408,6 +474,39 @@ export const FeedPost = ({ post }: { post: Post }) => {
                     onClose={() => setIsLikesModalOpen(false)}
                 />
             )}
+
+            <Modal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                title="Delete Post"
+                size="sm"
+            >
+                <div className="flex flex-col gap-4">
+                    <div className="flex items-center gap-3 p-3 bg-red-50 rounded-xl text-red-600">
+                        <AlertCircle className="shrink-0" size={24} />
+                        <p className="text-sm font-medium">Are you sure you want to delete this post? This action cannot be undone.</p>
+                    </div>
+
+                    <div className="flex gap-3 mt-2">
+                        <Button
+                            variant="outline"
+                            className="flex-1 rounded-xl"
+                            onClick={() => setIsDeleteModalOpen(false)}
+                            disabled={isDeleting}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="primary"
+                            className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 border-red-600 shadow-lg shadow-red-200"
+                            onClick={handleDeletePost}
+                            loading={isDeleting}
+                        >
+                            Delete
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };
