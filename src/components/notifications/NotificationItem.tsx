@@ -64,7 +64,7 @@ export const NotificationItem = ({ notification, onMarkRead, onDelete }: Notific
         >
             {/* Unread Indicator */}
             {!read && (
-                <span className="absolute left-1.5 top-4.5 h-1.5 w-1.5 rounded-full bg-[var(--color-primary)] shrink-0" />
+                <span className="absolute left-1.5 top-4.5 h-1.5 w-1.5 rounded-full bg-black shrink-0" />
             )}
 
             {/* Avatar with type icon badge */}

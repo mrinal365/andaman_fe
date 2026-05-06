@@ -24,7 +24,7 @@ import { cn } from '@/utils/cn';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-const FILTERS = ['All', 'Unread', 'Likes', 'Comments', 'Follows', 'Messages'];
+const FILTERS = ['All', 'Likes', 'Comments', 'Follows', 'Messages'];
 
 const TYPE_FILTER_MAP: Record<string, string[]> = {
     Likes:    ['likePost', 'likeComment'],
@@ -38,15 +38,29 @@ export default function NotificationsPage() {
     const router = useRouter();
     const { items, hasMore, page, unreadCount } = useAppSelector((state: RootState) => state.notifications);
 
-    const [filter, setFilter] = useState('Unread');
+    const [filter, setFilter] = useState('All');
     const [isLoading, setIsLoading] = useState(true);
 
     const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        if (!loadMoreRef.current) return;
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+                    handleLoadMore();
+                }
+            },
+            { threshold: 0.1 }
+        );
+        observer.observe(loadMoreRef.current);
+        return () => observer.disconnect();
+    }, [hasMore, isLoadingMore, page]);
     
     // Filter items client-side
     const filtered = items.filter((n) => {
         if (filter === 'All') return true;
-        if (filter === 'Unread') return !n.read;
         const types = TYPE_FILTER_MAP[filter];
         return types ? types.includes(n.type) : true;
     });
@@ -237,20 +251,10 @@ export default function NotificationsPage() {
                     )}
 
 
-                    {/* Load More */}
+                    {/* Load More Trigger */}
                     {!isLoading && hasMore && (
-                        <div className="p-6 text-center">
-                            <button
-                                onClick={handleLoadMore}
-                                disabled={isLoadingMore}
-                                className="px-4 py-2 rounded-full border border-gray-200 text-[12px] font-medium text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50"
-                            >
-                                {isLoadingMore ? (
-                                    <span className="flex items-center gap-2">
-                                        <Loader2 className="w-3 h-3 animate-spin" /> Loading...
-                                    </span>
-                                ) : 'Load more'}
-                            </button>
+                        <div ref={loadMoreRef} className="p-6 flex justify-center">
+                            <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
                         </div>
                     )}
 
