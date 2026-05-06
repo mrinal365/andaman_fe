@@ -8,19 +8,26 @@ import { getCookie } from './utils';
 const publicPaths = ['/login', '/signup'];
 
 export async function middleware(request: NextRequest) {
-    console.log("middleware wexcectired")
     const { pathname } = request.nextUrl;
 
-    // Check if the path is public
+    // Get token from cookies
+    const token = request.cookies.get(TOKEN_KEY)?.value;
+
+    // Handle root path (/)
+    if (pathname === '/') {
+        return NextResponse.redirect(new URL(token ? '/feed' : '/login', request.url));
+    }
+
+    // 1. If user is on a public path (login/signup) and HAS a token, redirect to feed
     if (publicPaths.some(path => pathname.startsWith(path))) {
+        if (token) {
+            return NextResponse.redirect(new URL('/feed', request.url));
+        }
         return NextResponse.next();
     }
 
-    // Get token from cookies (assuming 'token' is the cookie name)
-    const token = request.cookies.get(TOKEN_KEY)?.value;
-
+    // 2. If user is NOT on a public path and has NO token, redirect to login
     if (!token) {
-        // No token found, redirect to login
         return NextResponse.redirect(new URL('/login?error=session_expired', request.url));
     }
 
