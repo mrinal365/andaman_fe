@@ -55,7 +55,6 @@ export const EditProfileModal = ({ isOpen, onClose, user }: EditProfileModalProp
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
         if (formData.password && formData.password !== formData.confirmPassword) {
             toast.error("Passwords don't match");
             return;
