@@ -86,13 +86,6 @@ const postsSlice = createSlice({
 
             post.stats.commentCount += 1;
         },
-        decreaseCommentCount(state, action: PayloadAction<string>) {
-            const post = state.byId[action.payload];
-            if (!post) return;
-            if (!post.stats) post.stats = { likeCount: 0, commentCount: 0, viewCount: 0, shareCount: 0 };
-
-            post.stats.commentCount = Math.max(0, post.stats.commentCount - 1);
-        },
         appendFeed: (state, action: PayloadAction<{ posts: Post[] }>) => {
             action.payload.posts.forEach((post: Post) => {
                 if (!state.byId[post.id]) {
@@ -163,7 +156,6 @@ export const {
     appendFeed,
     addPostOptimistic,
     increaseCommentCount,
-    decreaseCommentCount,
     deletePostOptimistic
 } = postsSlice.actions;
 

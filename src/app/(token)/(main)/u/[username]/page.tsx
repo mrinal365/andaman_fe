@@ -433,7 +433,7 @@ export default function ProfilePage() {
                                     {user.bio}
                                 </p>
                             )}
-                            
+
                             {user.tags && user.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-2">
                                     {user.tags.map((tag) => (
@@ -484,7 +484,7 @@ export default function ProfilePage() {
                                 </button>
                             </>
                         ) : (
-                            <button 
+                            <button
                                 onClick={() => setIsEditModalOpen(true)}
                                 className="bg-gray-100 text-gray-900 px-6 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-gray-200 transition-all shadow-sm"
                             >
@@ -493,7 +493,7 @@ export default function ProfilePage() {
                             </button>
                         )}
                         <div className="relative" ref={menuRef}>
-                            <button 
+                            <button
                                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                                 className="bg-gray-100 text-gray-900 p-2 rounded-lg font-bold hover:bg-gray-200 transition-all shadow-sm h-[40px] w-[40px] flex items-center justify-center"
                             >
@@ -641,7 +641,7 @@ export default function ProfilePage() {
                                                 <p className="text-sm text-gray-500 font-bold">@{u.handle}</p>
                                             </div>
                                         </div>
-                                        {currentUser && currentUser.id !== u.id && currentUser._id !== u._id && currentUser.id !== u._id && currentUser._id !== u.id && (
+                                        {currentUser?.id !== u.id && (
                                             <button
                                                 className={cn(
                                                     "px-4 py-1.5 rounded-lg font-bold text-sm transition-all",
@@ -742,13 +742,13 @@ export default function ProfilePage() {
 
             {/* Edit Profile Modal */}
             {user && (
-                <EditProfileModal 
-                    isOpen={isEditModalOpen} 
+                <EditProfileModal
+                    isOpen={isEditModalOpen}
                     onClose={() => {
                         setIsEditModalOpen(false);
                         fetchProfile(); // Refresh profile data after edit
-                    }} 
-                    user={user} 
+                    }}
+                    user={user}
                 />
             )}
         </div>

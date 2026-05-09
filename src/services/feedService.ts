@@ -58,11 +58,6 @@ export const getPostLikes = async (postId: string): Promise<any> => {
     const response = await api.get<any>(`/posts/${postId}/likes`);
     return response.data;
 };
-
-export const getPostById = async (postId: string): Promise<Post> => {
-    const response = await api.get<any>(`/posts/${postId}`);
-    return response.data;
-};
 export const createPost = async (post: any): Promise<any> => {
     const response = await api.post<any>('/posts', post);
     return response.data;
@@ -112,10 +107,5 @@ export const recordView = async (postId: string): Promise<any> => {
 // };
 export const deletePost = async (postId: string): Promise<any> => {
     const response = await api.delete<any>(`/posts/${postId}`);
-    return response.data;
-};
-
-export const deleteComment = async (commentId: string): Promise<any> => {
-    const response = await api.delete<any>(`/comments/${commentId}`);
     return response.data;
 };

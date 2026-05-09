@@ -76,7 +76,7 @@ export default function SignupPage() {
         onError: () => toast.error("Google login failed"),
     });
 
-  
+
 
     return (
         <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
@@ -158,9 +158,9 @@ export default function SignupPage() {
                         </Button>
                     </form>
 
-                    <GoogleProgressModal 
-                        isOpen={showProgressModal} 
-                        onComplete={() => completeLogin(pendingAuthResponse)} 
+                    <GoogleProgressModal
+                        isOpen={showProgressModal}
+                        onComplete={() => completeLogin(pendingAuthResponse)}
                     />
 
                     <div className="mt-8 text-center">

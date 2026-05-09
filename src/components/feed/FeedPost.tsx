@@ -41,10 +41,9 @@ export const FeedPost = ({ post }: { post: Post }) => {
     const [isTagHovered, setIsTagHovered] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
-    const authorData = post.author || post.authorId;
-    const authorId = authorData?._id || authorData;
+    const authorId = post.authorId?._id || post.authorId;
     const isOwnPost = currentUser?.id === authorId;
-    const authorHandle = authorData?.handle || (isOwnPost ? currentUser?.handle : '');
+    const authorHandle = post.authorId?.handle || (isOwnPost ? currentUser?.handle : '');
 
 
     const postId = post.id;
@@ -239,17 +238,17 @@ export const FeedPost = ({ post }: { post: Post }) => {
             toast.error('Please login to follow users');
             return;
         }
-        if (!authorData?._id) return;
+        if (!post?.authorId?._id) return;
         try {
             setIsFollowLoading(true);
             if (isFollowing) {
-                await unfollowUser(authorData._id);
+                await unfollowUser(post.authorId._id);
                 setIsFollowing(false);
-                toast.success(`Unfollowed ${authorData.name}`);
+                toast.success(`Unfollowed ${post.authorId.name}`);
             } else {
-                await followUser(authorData._id);
+                await followUser(post.authorId._id);
                 setIsFollowing(true);
-                toast.success(`You followed ${authorData.name}`);
+                toast.success(`You followed ${post.authorId.name}`);
             }
         } catch (err) {
             toast.error('Action failed');
@@ -295,8 +294,8 @@ export const FeedPost = ({ post }: { post: Post }) => {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <Avatar
-                            name={authorData?.name || (isOwnPost ? currentUser?.name : '')}
-                            src={authorData?.avatar || (isOwnPost ? currentUser?.avatar : 'https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250')}
+                            name={post?.authorId?.name || (isOwnPost ? currentUser?.name : '')}
+                            src={post?.authorId?.avatar || (isOwnPost ? currentUser?.avatar : 'https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250')}
                             handle={authorHandle}
                             size="md"
                         />
@@ -307,23 +306,23 @@ export const FeedPost = ({ post }: { post: Post }) => {
                                     className="font-bold text-sm text-gray-900 leading-none hover:underline"
                                     onClick={(e) => e.stopPropagation()}
                                 >
-                                    {authorData?.name || (isOwnPost ? currentUser?.name : 'demo author')}
+                                    {post?.authorId?.name || (isOwnPost ? currentUser?.name : 'demo author')}
                                 </Link>
-                                {authorData?.verified && (
+                                {post?.authorId?.verified && (
                                     <BadgeCheck className="h-[14px] w-[14px] text-green-700 fill-green-700/30" />
                                 )}
                                 {post?.taggedUsers && post.taggedUsers.length > 0 && (
                                     <span className="text-[13px] text-gray-500 flex items-center gap-1 flex-wrap">
                                         with{' '}
-                                        <Link 
-                                            href={`/u/${post.taggedUsers[0].handle}`} 
+                                        <Link
+                                            href={`/u/${post.taggedUsers[0].handle}`}
                                             className="font-bold text-gray-700 hover:text-[var(--color-primary)] transition-colors hover:underline"
                                             onClick={(e) => e.stopPropagation()}
                                         >
                                             {post.taggedUsers[0].name}
                                         </Link>
                                         {post.taggedUsers.length > 1 && (
-                                            <div 
+                                            <div
                                                 className="relative inline-block"
                                                 onMouseEnter={() => setIsTagHovered(true)}
                                                 onMouseLeave={() => setIsTagHovered(false)}
@@ -331,7 +330,7 @@ export const FeedPost = ({ post }: { post: Post }) => {
                                                 <span className="font-bold text-gray-500 cursor-help">
                                                     {` +${post.taggedUsers.length - 1}`}
                                                 </span>
-                                                
+
                                                 {isTagHovered && (
                                                     <div className="absolute top-full left-0 mt-2 p-3 bg-white rounded-xl shadow-2xl border border-gray-100 z-[100] min-w-[180px] animate-in fade-in slide-in-from-top-2 duration-200 pointer-events-none">
                                                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tagged Users</p>
