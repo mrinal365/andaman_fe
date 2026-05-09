@@ -85,6 +85,10 @@ export const ChatNotificationProvider = ({ children }: { children: React.ReactNo
                 isOpen: selectedConversationId === data.conversationId && isMessagesPage
             }));
 
+            if (selectedConversationId === data.conversationId && isMessagesPage && currentUser?.id) {
+                socket.emit("mark_seen", { conversationId: data.conversationId, userId: currentUser.id });
+            }
+
             addNotification(data);
         };
 

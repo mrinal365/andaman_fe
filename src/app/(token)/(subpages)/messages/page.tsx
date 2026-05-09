@@ -20,9 +20,6 @@ export default function MessagesPage() {
     const activeConversation = selectedConversationId ? conversations.byId[selectedConversationId] : null;
 
     useEffect(() => {
-        // Clear unread message badge when entering messages page
-        dispatch(clearUnreadMessages());
-
         // Initial fetch of conversations for the list
         setIsLoading(true);
         getConversations().then((res: any) => {

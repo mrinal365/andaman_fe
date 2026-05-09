@@ -24,6 +24,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setSelectedConversation, updateLastMessage } from '@/store/features/chat/conversationSlice';
 import { addMessage, setMessages, setLastReadAt, prependMessages } from '@/store/features/chat/chatSlice';
 import { selectMessagesForConversation } from '@/store/features/chat/chatSelectors';
+import { markConversationMessagesRead } from '@/store/features/notificationSlice';
 import { chatConfig } from '@/config/chatConfig';
 
 import { uploadImage } from '@/services/uploadService';
@@ -292,6 +293,7 @@ export const ChatWindow = () => {
             console.log("✅ Connected:", socket.id);
             if (selectedConversationId) {
                 socket.emit("join_conversation", selectedConversationId);
+                dispatch(markConversationMessagesRead(selectedConversationId));
                 // Mark messages as seen when we connect and are in a conversation
                 if (currentUser?.id) {
                     socket.emit("mark_seen", { conversationId: selectedConversationId, userId: currentUser.id });
@@ -303,6 +305,7 @@ export const ChatWindow = () => {
 
         if (socket.connected && selectedConversationId) {
             socket.emit("join_conversation", selectedConversationId);
+            dispatch(markConversationMessagesRead(selectedConversationId));
             if (currentUser?.id) {
                 socket.emit("mark_seen", { conversationId: selectedConversationId, userId: currentUser.id });
             }
@@ -406,6 +409,7 @@ export const ChatWindow = () => {
                     otherUserLastReadAt: res?.otherUserLastReadAt,
                     hasMore: res?.hasMore
                 }));
+                dispatch(markConversationMessagesRead(selectedConversationId));
                 console.log("Fetched messages:", res);
             })
             .catch((err) => {

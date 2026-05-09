@@ -126,6 +126,7 @@ export default function NotificationsPage() {
                 notifications: res.notifications,
                 hasMore: res.pagination.hasMore,
                 unreadCount: res.unreadCount,
+                unreadMessages: res.unreadMessages,
             }));
         } catch (err) {
             console.error(err);

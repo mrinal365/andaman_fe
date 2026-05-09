@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { RootState } from '@/store/store';
-import { addLiveNotification, setUnreadCount, incrementUnreadMessages } from '@/store/features/notificationSlice';
+import { addLiveNotification, setUnreadCount, setUnreadConversationIds } from '@/store/features/notificationSlice';
 import { updateLastMessage } from '@/store/features/chat/conversationSlice';
 import { addMessage } from '@/store/features/chat/chatSlice';
 import { setLastReadAt } from '@/store/features/chat/chatSlice';
@@ -35,7 +35,10 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
         // Fetch initial unread count
         getUnreadCount()
-            .then(({ count }) => dispatch(setUnreadCount(count)))
+            .then(({ unreadCount, unreadConversationIds }) => {
+                dispatch(setUnreadCount(unreadCount));
+                dispatch(setUnreadConversationIds(unreadConversationIds || []));
+            })
             .catch(() => {});
 
         // Join personal user room for notifications
@@ -48,6 +51,11 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
         // Listen for live notifications
         const onNotification = (data: any) => {
+            // If it's a message and we're currently looking at that conversation, 
+            // don't increment the unread count or show a toast.
+            if (data.type === 'message' && data.data?.conversationId === selectedConversationIdRef.current) {
+                return;
+            }
             dispatch(addLiveNotification(data));
         };
 
