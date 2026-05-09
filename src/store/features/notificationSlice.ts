@@ -115,6 +115,11 @@ const notificationSlice = createSlice({
             state.unreadMessages = action.payload;
         },
 
+        setUnreadConversationIds: (state, action: PayloadAction<string[]>) => {
+            state.unreadConversationIds = action.payload;
+            state.unreadMessages = action.payload.length;
+        },
+
         incrementUnreadMessages: (state) => {
             state.unreadMessages += 1;
         },
