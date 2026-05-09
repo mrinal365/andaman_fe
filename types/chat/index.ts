@@ -11,6 +11,8 @@ export interface Message {
     type: "text" | "image" | "video" | "file";
     sequence: number;
     readBy?: string[];
+    status?: 'sending' | 'sent' | 'failed';
+    tempId?: string;
     createdAt: string;
     updatedAt: string;
 }

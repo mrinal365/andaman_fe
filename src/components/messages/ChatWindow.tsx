@@ -12,7 +12,9 @@ import {
     ChevronLeft,
     ChevronDown,
     Loader2,
-    MessageCircle
+    MessageCircle,
+    AlertCircle,
+    RefreshCw
 } from 'lucide-react';
 import { Avatar } from '@/components/common/Avatar';
 import { Conversation } from '../../../types/chat';
@@ -22,7 +24,7 @@ import { getChatsForConversation, sendMessage } from '@/services/chatServices';
 import { RootState } from '@/store/store';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setSelectedConversation, updateLastMessage } from '@/store/features/chat/conversationSlice';
-import { addMessage, setMessages, setLastReadAt, prependMessages } from '@/store/features/chat/chatSlice';
+import { addMessage, setMessages, setLastReadAt, prependMessages, updateMessageStatus, replaceMessage } from '@/store/features/chat/chatSlice';
 import { selectMessagesForConversation } from '@/store/features/chat/chatSelectors';
 import { markConversationMessagesRead } from '@/store/features/notificationSlice';
 import { chatConfig } from '@/config/chatConfig';
@@ -331,70 +333,73 @@ export const ChatWindow = () => {
     };
 
     // ✅ send message to backend
-    const onClickSendMessage = () => {
-        if (!messageText.trim()) return;
+    const onClickSendMessage = async (textToRetry?: string, tempIdToRetry?: string) => {
+        const text = textToRetry || messageText;
+        if (!text.trim() || !selectedConversationId) return;
 
-        // socket.emit("send_message", {
-        //     text: "Hello",
-        // });
+        const tempId = tempIdToRetry || `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-        sendMessage({
+        // Optimistic Message
+        const optimisticMsg: any = {
+            id: tempId,
+            tempId: tempId,
             conversationId: selectedConversationId,
-            text: messageText
-        })
-            .then((res) => {
-                console.log("message sent", res);
-                // Handle case where backend wraps response in `data`
-                const completeMessage = res?.data ? { ...res.data } : { ...res };
+            senderId: currentUser?.id,
+            sender: currentUser,
+            text: text,
+            type: 'text',
+            status: 'sending',
+            createdAt: new Date().toISOString(),
+            sequence: Date.now() // temporary sequence
+        };
 
-                // Force the correct conversation ID so it shows up in the current chat
-                completeMessage.conversationId = selectedConversationId;
+        if (!tempIdToRetry) {
+            dispatch(addMessage(optimisticMsg));
+            setMessageText("");
+            // Clear typing indicator manually
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            socket.emit("typing_end", { conversationId: selectedConversationId, userId: currentUser?.id });
+        } else {
+            dispatch(updateMessageStatus({ messageId: tempId, status: 'sending' }));
+        }
 
-                // Ensure it has a sequence so it sorts to the bottom
-                if (!completeMessage.sequence) {
-                    completeMessage.sequence = completeMessage.messageSequence || Date.now();
-                }
+        try {
+            const res = await sendMessage({
+                conversationId: selectedConversationId,
+                text: text
+            });
 
-                if (!completeMessage.sender || typeof completeMessage.sender === 'string') {
-                    completeMessage.sender = currentUser;
-                }
-                dispatch(addMessage(completeMessage));
+            const completeMessage = res?.data ? { ...res.data } : { ...res };
+            completeMessage.conversationId = selectedConversationId;
 
-                dispatch(updateLastMessage({
-                    conversationId: selectedConversationId,
-                    message: messageText,
-                    media: [],
-                    time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
-                    createdAt: completeMessage.createdAt,
-                    isOwn: true,
-                    isOpen: true
-                }));
+            if (!completeMessage.sequence) {
+                completeMessage.sequence = completeMessage.messageSequence || Date.now();
+            }
 
-                // Clear typing indicator manually when sent
-                if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-                socket.emit("typing_end", { conversationId: selectedConversationId, userId: currentUser?.id });
-            })
-            .catch((err) => {
-                console.log("message not sent", err);
-            })
-            .finally(() => {
-                setMessageText("");
-            })
-        // console.log("socket running", {
-        //     conversationId: selectedConversationId,
-        //     senderId: currentUser?._id,
-        //     text: "messageText"
-        // })
-        // socket.emit("send_message", {
-        //     conversationId: selectedConversationId,
-        //     senderId: currentUser?._id,
-        //     text: "messageText"
-        // });
-        console.log("socket doen")
+            if (!completeMessage.sender || typeof completeMessage.sender === 'string') {
+                completeMessage.sender = currentUser;
+            }
 
-        // setMessage("");
+            dispatch(replaceMessage({ tempId, message: completeMessage }));
+
+            dispatch(updateLastMessage({
+                conversationId: selectedConversationId,
+                message: text,
+                media: [],
+                time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+                createdAt: completeMessage.createdAt,
+                isOwn: true,
+                isOpen: true
+            }));
+        } catch (error) {
+            console.error("message failed", error);
+            dispatch(updateMessageStatus({ messageId: tempId, status: 'failed' }));
+        }
     };
 
+    const handleRetryMessage = (msg: any) => {
+        onClickSendMessage(msg.text, msg.id);
+    };
 
     useEffect(() => {
         setIsLoading(true);
@@ -579,15 +584,31 @@ export const ChatWindow = () => {
                                                                 <span>{msg.text}</span>
                                                             </div>
                                                         )}
-                                                        <div className={cn("flex items-center justify-end gap-1 mt-1 opacity-80", isOwn ? "text-white" : "text-gray-500")}>
-                                                            <span className="text-[10px] leading-none">{timeString}</span>
-                                                            {isOwn && (
-                                                                <CheckCheck className={cn(
-                                                                    "h-[14px] w-[14px]",
-                                                                    (otherUserLastReadAt && new Date(msg.createdAt) <= new Date(otherUserLastReadAt))
-                                                                        ? "text-[#53bdeb]"
-                                                                        : "text-white opacity-70"
-                                                                )} />
+                                                        <div className={cn("flex items-center justify-end gap-1 mt-1", isOwn ? "text-white" : "text-gray-500")}>
+                                                            {msg.status === 'failed' ? (
+                                                                <div className="flex items-center gap-1.5 py-1 px-2 bg-red-500/20 rounded-md border border-red-500/30">
+                                                                    <AlertCircle className="h-3 w-3 text-red-500" />
+                                                                    <span className="text-[10px] font-bold text-red-100">Failed</span>
+                                                                    <button 
+                                                                        onClick={() => handleRetryMessage(msg)}
+                                                                        className="text-[10px] font-black text-white hover:underline flex items-center gap-1"
+                                                                    >
+                                                                        <RefreshCw className="h-2.5 w-2.5" />
+                                                                        RETRY
+                                                                    </button>
+                                                                </div>
+                                                            ) : (
+                                                                <>
+                                                                    <span className="text-[10px] leading-none opacity-80">{timeString}</span>
+                                                                    {isOwn && (
+                                                                        <CheckCheck className={cn(
+                                                                            "h-[14px] w-[14px]",
+                                                                            (otherUserLastReadAt && new Date(msg.createdAt) <= new Date(otherUserLastReadAt))
+                                                                                ? "text-[#53bdeb]"
+                                                                                : (msg.status === 'sending' ? "text-white opacity-30" : "text-white opacity-70")
+                                                                        )} />
+                                                                    )}
+                                                                </>
                                                             )}
                                                         </div>
                                                     </div>
@@ -680,7 +701,7 @@ export const ChatWindow = () => {
                     </div>
 
 
-                    <button onClick={onClickSendMessage} className="h-[44px] w-[44px] flex items-center justify-center rounded-lg bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] transition-all active:scale-95">
+                    <button onClick={() => onClickSendMessage()} className="h-[44px] w-[44px] flex items-center justify-center rounded-lg bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] transition-all active:scale-95">
                         <Send className="h-4.5 w-4.5 fill-current ml-0.5" />
                     </button>
                 </div>
