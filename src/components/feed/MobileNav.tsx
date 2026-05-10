@@ -69,47 +69,40 @@ export const MobileBottomNav = () => {
 
     return (
         <>
-            <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-100 z-50 flex items-center justify-around px-2 pb-safe">
+            <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-100 z-50 flex items-center px-1 pb-safe">
                 {NAV_ITEMS.map((item) => {
                     const isActive = pathname === item.route;
 
-                    if (item.isAction) {
-                        return (
-                            <button
-                                key={item.label}
-                                onClick={() => setIsPostModalOpen(true)}
-                                className="flex items-center justify-center h-11 w-11 bg-[var(--color-primary)] text-white rounded-full shadow-lg shadow-[var(--color-primary)]/20 active:scale-95 transition-all -mt-4 border-4 border-white"
-                            >
-                                <Plus className="h-7 w-7 stroke-[3]" />
-                            </button>
-                        );
-                    }
-
                     return (
-                        <Link
-                            key={item.label}
-                            href={item.route}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all relative ${
-                                isActive ? 'text-[var(--color-primary)]' : 'text-gray-400'
-                            }`}
-                        >
-                            <div className="relative">
-                                <item.icon 
-                                    className={`h-6 w-6 transition-all ${isActive ? 'stroke-[2.5px] fill-current scale-110' : 'stroke-[2px]'}`} 
-                                />
-                                {(item as any).badge > 0 && (
-                                    <span className="absolute -top-1.5 -right-1.5 h-4 min-w-[16px] px-1 flex items-center justify-center bg-red-500 text-white text-[8px] font-black rounded-full border border-white">
-                                        {(item as any).badge > 50 ? '50+' : (item as any).badge}
-                                    </span>
-                                )}
-                                {(item as any).verified && (
-                                    <div className="absolute -top-1 -right-1 bg-white rounded-full p-0.5">
-                                        <BadgeCheck className="h-3 w-3 text-[var(--color-primary)] fill-[var(--color-primary)]/10" />
+                        <div key={item.label} className="flex-1 flex justify-center">
+                            {item.isAction ? (
+                                <button
+                                    onClick={() => setIsPostModalOpen(true)}
+                                    className="flex items-center justify-center h-12 w-12 bg-black text-white rounded-full shadow-lg active:scale-95 transition-all -mt-8 border-[4px] border-white shrink-0"
+                                >
+                                    <Plus className="h-7 w-7 stroke-[3]" />
+                                </button>
+                            ) : (
+                                <Link
+                                    href={item.route}
+                                    className={`flex flex-col items-center justify-center gap-1 w-full py-1 transition-all relative ${
+                                        isActive ? 'text-black' : 'text-gray-400'
+                                    }`}
+                                >
+                                    <div className="relative">
+                                        <item.icon 
+                                            className={`h-6 w-6 transition-all ${isActive ? 'stroke-[2.5px] fill-current scale-105' : 'stroke-[2px]'}`} 
+                                        />
+                                        {(item as any).badge > 0 && (
+                                            <span className="absolute -top-1.5 -right-1.5 h-4 min-w-[16px] px-1 flex items-center justify-center bg-red-500 text-white text-[8px] font-black rounded-full border border-white">
+                                                {(item as any).badge > 50 ? '50+' : (item as any).badge}
+                                            </span>
+                                        )}
                                     </div>
-                                )}
-                            </div>
-                            <span className="text-[10px] font-bold tracking-tight">{item.label}</span>
-                        </Link>
+                                    <span className="text-[10px] font-bold tracking-tight truncate w-full text-center">{item.label}</span>
+                                </Link>
+                            )}
+                        </div>
                     );
                 })}
             </nav>
