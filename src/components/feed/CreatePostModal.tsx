@@ -21,6 +21,7 @@ import { createPost } from '@/services/feedService';
 import { addPostOptimistic } from '@/store/features/postSlice';
 import { uploadImage } from '@/services/uploadService';
 import { searchUsers } from '@/services/userService';
+import { toast } from 'react-toastify';
 
 interface CreatePostModalProps {
     isOpen: boolean;
@@ -38,6 +39,7 @@ export const CreatePostModal = ({ isOpen, onClose }: CreatePostModalProps) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [images, setImages] = useState<string[]>([]);
     const [isUploading, setIsUploading] = useState(false);
+    const [uploadingCount, setUploadingCount] = useState(0);
     
     // Tagging state
     const [taggedUsers, setTaggedUsers] = useState<any[]>([]);
@@ -109,25 +111,54 @@ export const CreatePostModal = ({ isOpen, onClose }: CreatePostModalProps) => {
             setPostType('update');
             setImages([]);
             setTaggedUsers([]);
+            toast.success('Post created successfully!');
             closeModal();
         }).catch((error) => {
             console.error("Failed to submit post", error);
+            const message = error.response?.data?.message || error.message || "Failed to submit post";
+            toast.error(message);
         }).finally(() => {
             setIsSubmitting(false);
         });
     };
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file || images.length >= 5) return;
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        const currentImagesCount = images.length;
+        const availableSlots = 5 - currentImagesCount;
+        
+        if (availableSlots <= 0) {
+            toast.warning('Maximum 5 images allowed');
+            e.target.value = '';
+            return;
+        }
+
+        const filesToUpload = Array.from(files).slice(0, availableSlots);
+        
         setIsUploading(true);
+        setUploadingCount(filesToUpload.length);
+
         try {
-            const uploaded = await uploadImage(file);
-            setImages((prev) => [...prev, uploaded.url]);
+            const uploadPromises = filesToUpload.map(async (file) => {
+                try {
+                    const uploaded = await uploadImage(file);
+                    setImages((prev) => [...prev, uploaded.url]);
+                } catch (err) {
+                    console.error('Upload failed for a file', err);
+                    toast.error(`Failed to upload ${file.name}`);
+                } finally {
+                    setUploadingCount(prev => Math.max(0, prev - 1));
+                }
+            });
+
+            await Promise.all(uploadPromises);
         } catch (err) {
-            console.error('Upload failed', err);
+            console.error('Batch upload failed', err);
         } finally {
             setIsUploading(false);
+            setUploadingCount(0);
             e.target.value = '';
         }
     };
@@ -220,12 +251,18 @@ export const CreatePostModal = ({ isOpen, onClose }: CreatePostModalProps) => {
                     </div>
 
                     {/* Image previews */}
-                    {images.length > 0 && (
+                    {(images.length > 0 || uploadingCount > 0) && (
                         <div className="grid grid-cols-3 gap-2">
                             {images.map((img, i) => (
                                 <div key={i} className="relative group rounded-lg overflow-hidden aspect-square">
                                     <img className="w-full h-full object-cover" src={img} alt="" />
                                     <button onClick={() => removeImage(i)} className="absolute top-1 right-1 p-1 bg-black/60 rounded-full text-white"><X size={12}/></button>
+                                </div>
+                            ))}
+                            {/* Uploading skeletons */}
+                            {Array.from({ length: uploadingCount }).map((_, i) => (
+                                <div key={`skeleton-${i}`} className="relative rounded-lg overflow-hidden aspect-square bg-gray-100 animate-pulse flex items-center justify-center border border-gray-100">
+                                    <Loader2 className="w-5 h-5 text-gray-300 animate-spin" />
                                 </div>
                             ))}
                         </div>
@@ -290,7 +327,14 @@ export const CreatePostModal = ({ isOpen, onClose }: CreatePostModalProps) => {
                             <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold text-gray-500 hover:bg-gray-100 cursor-pointer transition-colors">
                                 {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
                                 {isUploading ? 'Uploading...' : 'Photo'}
-                                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={isSubmitting || images.length >= 5 || isUploading} />
+                                <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    multiple 
+                                    className="hidden" 
+                                    onChange={handleImageUpload} 
+                                    disabled={isSubmitting || images.length >= 5 || isUploading} 
+                                />
                             </label>
 
                             <button 
@@ -305,16 +349,17 @@ export const CreatePostModal = ({ isOpen, onClose }: CreatePostModalProps) => {
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <Button variant="outline" className="h-[36px] px-5 text-[13px]" onClick={closeModal} disabled={isSubmitting}>Cancel</Button>
+                            <Button variant="outline" className="h-[36px] px-5 text-[13px]" onClick={closeModal} disabled={isSubmitting || isUploading}>Cancel</Button>
                             <Button
                                 variant="primary"
                                 className="h-[36px] px-6 text-[13px]"
                                 onClick={() => handlePostSubmit(closeModal)}
                                 loading={isSubmitting}
                                 disabled={
-                                    postType === 'update' ? !postText.trim() && images.length === 0 :
+                                    isUploading ||
+                                    (postType === 'update' ? !postText.trim() && images.length === 0 :
                                     postType === 'guide' ? postTitle.length < 3 || postText.length < 50 :
-                                    postTitle.length < 3 || postText.length < 20
+                                    postTitle.length < 3 || postText.length < 20)
                                 }
                             >
                                 Post

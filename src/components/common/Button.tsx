@@ -18,16 +18,16 @@ export const Button: React.FC<ButtonProps> = ({
     disabled,
     ...props
 }) => {
-    const baseStyles = "font-bold py-3 px-4 rounded-lg transition-all transform duration-200 flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed";
+    const baseStyles = "font-bold py-3 px-4 rounded-lg transition-all transform duration-200 flex items-center justify-center gap-3 disabled:cursor-not-allowed";
 
     // Only apply hover/active effects when not loading/disabled
     const interactiveStyles = !loading && !disabled
         ? "hover:scale-[1.02] active:scale-[0.98]"
-        : "";
+        : "opacity-50 grayscale-[0.5]";
 
     const variants = {
-        primary: "bg-white text-black hover:bg-neutral-200 shadow-sm",
-        outline: "bg-transparent border border-neutral-700 text-black hover:text-white hover:bg-neutral-800 shadow-lg"
+        primary: "bg-black text-white hover:bg-neutral-800 shadow-sm disabled:bg-gray-100 disabled:text-gray-400",
+        outline: "bg-transparent border border-neutral-700 text-black hover:text-white hover:bg-neutral-800 shadow-lg disabled:border-gray-200 disabled:text-gray-300"
     };
 
     return (
