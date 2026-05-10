@@ -506,7 +506,7 @@ export const ChatWindow = () => {
             <div
                 ref={chatContainerRef}
                 onScroll={handleScroll}
-                className="flex-1 overflow-y-scroll p-4 flex flex-col gap-3 relative bg-gray-50 min-h-0 custom-scrollbar"
+                className="flex-1 overflow-y-scroll p-4 pb-20 md:pb-4 flex flex-col gap-3 relative bg-gray-50 min-h-0 custom-scrollbar"
             >
                 {isLoading ? (
                     <div className="flex-1 flex flex-col items-center justify-center h-full">
@@ -669,7 +669,7 @@ export const ChatWindow = () => {
             )}
 
             {/* Input */}
-            <div className="shrink-0 bg-white border-t border-gray-100 z-30 px-4 py-3 sticky bottom-0">
+            <div className="shrink-0 bg-white border-t border-gray-100 z-50 px-4 py-3 fixed bottom-0 left-0 right-0 md:sticky md:bottom-0">
                 {/* Emoji Picker Popover */}
                 {showEmoji && (
                     <div className="absolute bottom-full mb-2 left-4 z-50 shadow-xl rounded-xl">
