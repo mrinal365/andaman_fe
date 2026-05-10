@@ -211,6 +211,16 @@ export const ChatWindow = () => {
         }
     }, [lastMessageId, selectedConversationId, isLoading, isLoadingMore]);
 
+    // Auto-load more if content doesn't fill the container
+    useEffect(() => {
+        if (hasMore && !isLoading && !isLoadingMore && messages.length > 0 && chatContainerRef.current) {
+            const { scrollHeight, clientHeight } = chatContainerRef.current;
+            if (scrollHeight <= clientHeight + 10) { // Small buffer
+                handleLoadMore();
+            }
+        }
+    }, [messages.length, hasMore, isLoading, isLoadingMore, selectedConversationId]);
+
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const files = Array.from(e.target.files).slice(0, 5); // Max 5 images
@@ -496,7 +506,7 @@ export const ChatWindow = () => {
             <div
                 ref={chatContainerRef}
                 onScroll={handleScroll}
-                className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 relative bg-gray-50 min-h-0 custom-scrollbar"
+                className="flex-1 overflow-y-scroll p-4 flex flex-col gap-3 relative bg-gray-50 min-h-0 custom-scrollbar"
             >
                 {isLoading ? (
                     <div className="flex-1 flex flex-col items-center justify-center h-full">
