@@ -15,8 +15,16 @@ const api = axios.create({
 // Request Interceptor
 api.interceptors.request.use(
     (config) => {
-        // You can add auth token here if available
         const token = getCookie(TOKEN_KEY);
+        
+        // If no token and not an auth request, reject early to avoid 401s
+        if (!token && config.url && !config.url.includes('/auth/')) {
+            return Promise.reject({
+                message: 'No auth token available',
+                config
+            });
+        }
+
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -33,8 +41,8 @@ api.interceptors.response.use(
     (error) => {
         // Handle global errors (e.g., 401 Unauthorized)
         if (error.response && error.response.status === 401) {
-            // Handle unauthorized access (e.g., redirect to login)
-            toast.error('Wrong Credentials');
+            // Unauthorized - could be session expired or wrong credentials.
+            // Specific services will handle their own toasts if needed.
         }
         return Promise.reject(error);
     }

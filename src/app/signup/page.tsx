@@ -1,6 +1,6 @@
-'use client'
+'use client';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AuthBackground } from '@/components/login/AuthBackground';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
@@ -8,13 +8,21 @@ import { signup, googleLogin } from '@/services/authService';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { GoogleIcon } from '@/components/icons';
-import { setCookie } from '@/utils';
+import { setCookie, getCookie } from '@/utils';
 import { TOKEN_KEY } from '@/constants';
 import { useGoogleLogin } from '@react-oauth/google';
 import { GoogleProgressModal } from '@/components/auth/GoogleProgressModal';
 
 export default function SignupPage() {
     const router = useRouter();
+
+    useEffect(() => {
+        const token = getCookie(TOKEN_KEY);
+        if (token) {
+            router.replace('/feed');
+        }
+    }, [router]);
+
     const [isLoading, setIsLoading] = useState(false);
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
     const [showProgressModal, setShowProgressModal] = useState(false);
@@ -35,12 +43,10 @@ export default function SignupPage() {
         setIsLoading(true)
         signup(formData).then((res) => {
             toast.success("Signup Successful");
-            // setCookie("token", res?.token); not on register he has to login after register
             router.push("/feed");
-            console.log("res", res);
         }).catch((err) => {
-            // toast.error("Login Failed");
-            console.log("err", err);
+            const message = err.response?.data?.message || "Signup failed. Please try again.";
+            toast.error(message);
         }).finally(() => {
             setIsLoading(false)
         })

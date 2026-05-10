@@ -11,13 +11,21 @@ import { Button } from '@/components/common/Button';
 import { GoogleIcon } from '@/components/icons';
 import { isFormDataValid } from './utils';
 import { login, googleLogin } from '@/services/authService';
-import { setCookie } from '@/utils';
+import { setCookie, getCookie } from '@/utils';
 import { TOKEN_KEY } from '@/constants';
 import { useGoogleLogin } from '@react-oauth/google';
 import { GoogleProgressModal } from '@/components/auth/GoogleProgressModal';
 
 export default function LoginPage() {
     const router = useRouter()
+    
+    useEffect(() => {
+        const token = getCookie(TOKEN_KEY);
+        if (token) {
+            router.replace('/feed');
+        }
+    }, [router]);
+
     // const searchParams = useSearchParams(); // Get search params
     const [formData, setFormData] = useState({
         email: '',
@@ -49,10 +57,9 @@ export default function LoginPage() {
             toast.success("Login Successful");
             setCookie(TOKEN_KEY, res?.token);
             router.push("/feed");
-            console.log("res", res);
         }).catch((err) => {
-            // toast.error("Login Failed");
-            console.log("err", err);
+            const message = err.response?.data?.message || "Invalid email or password";
+            toast.error(message);
         }).finally(() => {
             setIsLoggingLoading(false)
         })
