@@ -10,7 +10,7 @@ export default function SubpageLayout({
             {/* Central Page Container */}
             <div className="w-full max-w-[1440px] bg-white border-x border-gray-100 flex flex-col h-full relative">
                 <SubpageNavbar />
-                <main className="flex-1 w-full relative overflow-hidden">
+                <main className="flex-1 w-full relative overflow-hidden flex flex-col">
                     {children}
                 </main>
             </div>

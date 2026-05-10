@@ -669,8 +669,7 @@ export const ChatWindow = () => {
             )}
 
             {/* Input */}
-            <div className="relative px-4 py-2 shrink-0 bg-white z-30">
-                {/* Added bg-white and sticky bottom to ensure it stays fixed if the parent height is weird */}
+            <div className="shrink-0 bg-white border-t border-gray-100 z-30 px-4 py-3 sticky bottom-0">
                 {/* Emoji Picker Popover */}
                 {showEmoji && (
                     <div className="absolute bottom-full mb-2 left-4 z-50 shadow-xl rounded-xl">

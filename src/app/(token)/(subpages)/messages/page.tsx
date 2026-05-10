@@ -39,7 +39,7 @@ export default function MessagesPage() {
     }, [dispatch]);
 
     return (
-        <div className="flex w-full h-full overflow-hidden bg-white">
+        <div className="flex w-full h-full bg-white overflow-hidden">
             {/* Chat List */}
             <div className={cn(
                 "flex-shrink-0 w-full md:w-[320px] lg:w-[360px] flex flex-col border-r border-gray-100 bg-white",
