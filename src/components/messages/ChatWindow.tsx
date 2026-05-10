@@ -433,12 +433,12 @@ export const ChatWindow = () => {
 
 
     return (
-        <div className="flex-1 flex flex-col bg-white relative overflow-x-hidden">
+        <div className="flex-1 flex flex-col h-full bg-white relative overflow-x-hidden">
             {/* <div className='text-black'>
                 conversation {selectedConversationId}
             </div> */}
             {/* Header */}
-            <div className="h-[60px] px-4 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white sticky top-0 z-30">
+            <div className="h-[60px] px-4 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white z-30">
                 <div className="flex items-center gap-3">
                     {selectedConversationId && (
                         <button
@@ -659,7 +659,7 @@ export const ChatWindow = () => {
             )}
 
             {/* Input */}
-            <div className="relative px-4 py-2 shrink-0 bg-white sticky bottom-0 z-30">
+            <div className="relative px-4 py-2 shrink-0 bg-white z-30">
             {/* Added bg-white and sticky bottom to ensure it stays fixed if the parent height is weird */}
                 {/* Emoji Picker Popover */}
                 {showEmoji && (

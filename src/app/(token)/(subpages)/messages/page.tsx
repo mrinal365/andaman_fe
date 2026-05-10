@@ -42,7 +42,7 @@ export default function MessagesPage() {
         <div className="flex w-full h-full overflow-hidden bg-white">
             {/* Chat List */}
             <div className={cn(
-                "flex-shrink-0 w-full md:w-[320px] lg:w-[360px] h-full flex-col border-r border-gray-100 bg-white",
+                "flex-shrink-0 w-full md:w-[320px] lg:w-[360px] flex flex-col border-r border-gray-100 bg-white",
                 selectedConversationId ? "hidden md:flex" : "flex"
             )}>
                 <ChatList isLoading={isLoading} />
@@ -50,7 +50,7 @@ export default function MessagesPage() {
 
             {/* Chat Window */}
             <div className={cn(
-                "flex-1 h-full flex-col bg-white",
+                "flex-1 flex flex-col bg-white",
                 selectedConversationId ? "flex" : "hidden md:flex"
             )}>
                 {activeConversation ? (
