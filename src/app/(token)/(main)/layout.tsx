@@ -11,7 +11,7 @@ export default function AuthLayout({
         <div className="h-screen bg-white flex justify-center w-full overflow-hidden">
             <MobileTopNav />
 
-            <div className="flex w-full max-w-[1440px] gap-0 lg:gap-4 px-0 lg:px-4 h-full pt-14 pb-16 lg:pt-0 lg:pb-0 border-x border-gray-100">
+            <div className="flex w-full max-w-[1440px] gap-0 lg:gap-4 px-0 lg:px-4 h-full pt-0 pb-16 lg:pt-0 lg:pb-0 border-x border-gray-100">
                 {/* Left Navigation (Common) */}
                 <div className="hidden lg:block w-[260px] shrink-0 h-full">
                     <Sidebar />

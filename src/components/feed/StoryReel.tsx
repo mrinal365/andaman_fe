@@ -160,7 +160,7 @@ export const StoryReel = () => {
             <div
                 ref={scrollRef}
                 onScroll={checkScroll}
-                className="flex gap-4 overflow-x-auto no-scrollbar py-2 items-start pl-1 scroll-smooth"
+                className="flex gap-4 overflow-x-auto no-scrollbar py-2 items-start px-4 scroll-smooth"
             >
                 {/* Dedicated Add Story Button */}
                 <div className="flex flex-col items-center gap-2 shrink-0">

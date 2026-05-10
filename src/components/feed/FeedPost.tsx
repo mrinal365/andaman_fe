@@ -128,6 +128,32 @@ export const FeedPost = ({ post }: { post: Post }) => {
         }
     };
 
+    const handleShare = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const postUrl = `${window.location.origin}/p/${postId}`;
+        
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: post.feed.title || 'Check out this post on Explore.baby',
+                    text: post.feed.previewText,
+                    url: postUrl,
+                });
+            } catch (err) {
+                if ((err as Error).name !== 'AbortError') {
+                    console.error('Error sharing:', err);
+                }
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(postUrl);
+                toast.success('Link copied to clipboard!');
+            } catch (err) {
+                toast.error('Failed to copy link');
+            }
+        }
+    };
+
     // =====================
     // IMAGE GRID LAYOUTS
     // =====================
@@ -139,7 +165,7 @@ export const FeedPost = ({ post }: { post: Post }) => {
 
         if (postImages.length === 1) {
             return (
-                <div className="relative w-full rounded-xl overflow-hidden mt-1 shadow-sm border border-gray-100/50 bg-black/5">
+                <div className="relative w-full overflow-hidden md:rounded-xl md:mt-2 shadow-sm border-y md:border border-gray-100/50 bg-black/5">
                     <SafeImage
                         src={postImages[0]}
                         alt="Post content"
@@ -153,7 +179,7 @@ export const FeedPost = ({ post }: { post: Post }) => {
 
         if (postImages.length === 2) {
             return (
-                <div className="grid grid-cols-2 gap-1 rounded-xl overflow-hidden mt-1 shadow-sm border border-gray-100/50">
+                <div className="grid grid-cols-2 gap-1 overflow-hidden md:rounded-xl md:mt-2 shadow-sm border-y md:border border-gray-100/50">
                     {postImages.map((img: string, i: number) => (
                         <div key={i} className="relative aspect-square bg-black/5">
                             <SafeImage
@@ -171,7 +197,7 @@ export const FeedPost = ({ post }: { post: Post }) => {
 
         if (postImages.length === 3) {
             return (
-                <div className="grid grid-cols-3 grid-rows-2 gap-1 rounded-xl overflow-hidden mt-1 shadow-sm border border-gray-100/50 h-[300px] md:h-[360px]">
+                <div className="grid grid-cols-3 grid-rows-2 gap-1 overflow-hidden md:rounded-xl md:mt-2 shadow-sm border-y md:border border-gray-100/50 h-[300px] md:h-[360px]">
                     <div className="row-span-2 col-span-2 bg-black/5">
                         <SafeImage
                             src={postImages[0]}
@@ -208,7 +234,7 @@ export const FeedPost = ({ post }: { post: Post }) => {
         const extraCount = postImages.length - 4;
 
         return (
-            <div className="grid grid-cols-2 gap-1 rounded-xl overflow-hidden mt-1 shadow-sm border border-gray-100/50">
+            <div className="grid grid-cols-2 gap-1 overflow-hidden md:rounded-xl md:mt-2 shadow-sm border-y md:border border-gray-100/50">
                 {gridImages.map((img: string, i: number) => (
                     <div key={i} className="relative aspect-square bg-black/5">
                         <SafeImage
@@ -285,13 +311,12 @@ export const FeedPost = ({ post }: { post: Post }) => {
 
     return (
         <div ref={postRef}>
-            <Card
-                className="flex flex-col gap-2 p-3 md:p-4 cursor-pointer hover:shadow-lg transition-shadow duration-200"
-                padding="none"
+            <div 
+                className="flex flex-col bg-white md:rounded-xl md:border md:border-gray-100 md:shadow-md cursor-pointer transition-all duration-200 md:mb-4"
                 onClick={() => setIsDetailOpen(true)}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between px-4 py-3 md:px-4 md:py-4">
                     <div className="flex items-center gap-3">
                         <Avatar
                             name={post?.authorId?.name || (isOwnPost ? currentUser?.name : '')}
@@ -303,7 +328,7 @@ export const FeedPost = ({ post }: { post: Post }) => {
                             <div className="flex items-center gap-1 flex-wrap">
                                 <Link
                                     href={`/u/${authorHandle}`}
-                                    className="font-bold text-sm text-gray-900 leading-none hover:underline"
+                                    className="font-bold text-[14px] text-gray-900 leading-none hover:underline"
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     {post?.authorId?.name || (isOwnPost ? currentUser?.name : 'demo author')}
@@ -349,29 +374,28 @@ export const FeedPost = ({ post }: { post: Post }) => {
                                     </span>
                                 )}
                             </div>
-                            <p className="text-xs text-gray-500 font-medium mt-0.5">
+                            <p className="text-[11px] text-gray-500 font-medium mt-0.5">
                                 {new Date(post?.createdAt).toLocaleString()}
-                                {/* {post?.location && ` • ${post?.location}`} */}
                             </p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
                         {!isOwnPost && (
                             <button
-                                onClick={handleFollowToggle}
-                                disabled={isFollowLoading}
+                                onClick={(e) => !isFollowing && handleFollowToggle(e)}
+                                disabled={isFollowLoading || isFollowing}
                                 className={cn(
                                     "text-[12px] font-bold px-3 py-1 rounded-lg transition-all",
                                     isFollowing
-                                        ? "text-gray-400 hover:text-gray-600"
-                                        : "text-[var(--color-primary)] hover:bg-blue-50"
+                                        ? "text-gray-400 cursor-default"
+                                        : "text-[var(--color-primary)] hover:bg-blue-50 active:scale-95"
                                 )}
                             >
                                 {isFollowLoading ? "..." : isFollowing ? "Following" : "Follow"}
                             </button>
                         )}
                         {post?.type && (
-                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border ${getTagStyles(post?.type)}`}>
+                            <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full capitalize border ${getTagStyles(post?.type)}`}>
                                 {post.type}
                             </span>
                         )}
@@ -409,22 +433,22 @@ export const FeedPost = ({ post }: { post: Post }) => {
                 </div>
 
                 {/* Text */}
-                {post?.feed?.title && (
-                    <p className="text-[14px] text-gray-800 leading-relaxed font-bold">{post.feed.title}</p>
-                )}
-                <p className="text-[14px] text-gray-800 leading-relaxed font-normal whitespace-pre-wrap">
-                    {renderTextWithTags(post?.feed?.previewText || '')}
-                </p>
+                <div className="px-4 pb-2">
+                    {post?.feed?.title && (
+                        <p className="text-[15px] text-gray-900 leading-tight font-black mb-1">{post.feed.title}</p>
+                    )}
+                    <p className="text-[14px] text-gray-800 leading-relaxed font-normal whitespace-pre-wrap">
+                        {renderTextWithTags(post?.feed?.previewText || '')}
+                    </p>
+                </div>
 
-                {/* Content: Video OR Image Grid */}
-                {/* {post?.video ? (
-                    <VideoPlayer url={post?.video} />
-                ) : ( */}
-                {renderImageGrid()}
-                {/* )} */}
+                {/* Content: Image Grid (Full Width on mobile, Padded on desktop) */}
+                <div className="md:px-4">
+                    {renderImageGrid()}
+                </div>
 
                 {/* Actions */}
-                <div className="flex items-center justify-between mt-0.5">
+                <div className="flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-1">
                         {/* Like */}
                         <div className="flex items-center gap-1.5 p-1.5 -ml-1.5 rounded-md hover:bg-gray-100/60 transition-all">
@@ -433,8 +457,8 @@ export const FeedPost = ({ post }: { post: Post }) => {
                                 className="active:scale-95"
                             >
                                 <Heart
-                                    className={`h-[20px] w-[20px] stroke-[1.5] transition-colors 
-                                    ${post?.viewerState?.liked ? 'text-[var(--color-primary)] fill-[var(--color-primary)]' : 'text-gray-500 stroke-[1.5]'}`}
+                                    className={`h-[22px] w-[22px] stroke-[1.5] transition-colors 
+                                    ${post?.viewerState?.liked ? 'text-red-500 fill-red-500' : 'text-gray-500 stroke-[1.5]'}`}
                                 />
                             </button>
                             {isOwnPost ? (
@@ -443,12 +467,12 @@ export const FeedPost = ({ post }: { post: Post }) => {
                                         e.stopPropagation();
                                         setIsLikesModalOpen(true);
                                     }}
-                                    className="text-[13px] font-semibold text-gray-500 hover:text-[var(--color-primary)] hover:underline tabular-nums"
+                                    className="text-[13px] font-bold text-gray-600 hover:text-red-500 hover:underline tabular-nums"
                                 >
                                     {post?.stats?.likeCount}
                                 </button>
                             ) : (
-                                <span className="text-[13px] font-semibold text-gray-500 tabular-nums">
+                                <span className="text-[13px] font-bold text-gray-600 tabular-nums">
                                     {post?.stats?.likeCount}
                                 </span>
                             )}
@@ -459,29 +483,26 @@ export const FeedPost = ({ post }: { post: Post }) => {
                             onClick={(e) => { e.stopPropagation(); setFocusComments(true); setIsDetailOpen(true); }}
                             className="flex items-center gap-1.5 group p-1.5 rounded-md hover:bg-gray-100/60 transition-all active:scale-95"
                         >
-                            <MessageCircle className="h-[20px] w-[20px] stroke-[1.5] text-gray-500 transition-colors" />
-                            <span className="text-[13px] font-semibold text-gray-500 tabular-nums">
+                            <MessageCircle className="h-[22px] w-[22px] stroke-[1.5] text-gray-500 transition-colors" />
+                            <span className="text-[13px] font-bold text-gray-600 tabular-nums">
                                 {post?.stats?.commentCount || 0}
                             </span>
                         </button>
 
                         {/* Views */}
-                        <button
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex items-center gap-1.5 group p-1.5 rounded-md hover:bg-gray-100/60 transition-all active:scale-95"
-                        >
-                            <Eye className="h-[20px] w-[20px] text-gray-500 stroke-[1.5] transition-colors" />
-                            <span className="text-[13px] font-semibold text-gray-500 tabular-nums">{post?.stats?.viewCount || 0}</span>
-                        </button>
+                        <div className="flex items-center gap-1.5 p-1.5 rounded-md text-gray-400">
+                            <Eye className="h-[20px] w-[20px] stroke-[1.5]" />
+                            <span className="text-[13px] font-bold tabular-nums">{post?.stats?.viewCount || 0}</span>
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-1">
                         {/* Share */}
                         <button
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex items-center gap-1.5 group p-1.5 rounded-full hover:bg-green-50/60 transition-all active:scale-95"
+                            onClick={handleShare}
+                            className="flex items-center gap-1.5 group p-1.5 rounded-full hover:bg-blue-50/60 transition-all active:scale-95"
                         >
-                            <Share2 className="h-[20px] w-[20px] text-gray-500 stroke-[1.5] group-hover:text-green-600 translate-y-0.5 transition-colors" />
+                            <Share2 className="h-[22px] w-[22px] text-gray-500 stroke-[1.5] group-hover:text-blue-600 transition-colors" />
                         </button>
 
                         {/* Bookmark */}
@@ -489,11 +510,11 @@ export const FeedPost = ({ post }: { post: Post }) => {
                             onClick={(e) => addInteraction(INTERACTION_TYPE.SAVE, e)}
                             className="group p-1.5 -mr-1.5 rounded-full hover:bg-gray-100/60 transition-all active:scale-95"
                         >
-                            <Bookmark className={post?.viewerState?.saved ? 'h-[20px] w-[20px] text-gray-500 stroke-[1.5] fill-black' : 'h-[20px] w-[20px] text-gray-500 stroke-[1.5]'} />
+                            <Bookmark className={post?.viewerState?.saved ? 'h-[20px] w-[20px] text-gray-900 fill-current' : 'h-[20px] w-[20px] text-gray-500 stroke-[1.5]'} />
                         </button>
                     </div>
                 </div>
-            </Card>
+            </div>
 
             {/* Post Detail Modal / Drawer */}
             <PostDetailModal
@@ -544,6 +565,8 @@ export const FeedPost = ({ post }: { post: Post }) => {
                     </div>
                 </div>
             </Modal>
+            {/* Mobile Divider Gap */}
+            <div className="h-2.5 bg-gray-100 md:hidden" />
         </div>
     );
 };

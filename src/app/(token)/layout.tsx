@@ -39,7 +39,7 @@ export default function TokenLayout({
 
     if (isLoading) {
         return (
-            <Loader text="Checking session..." />
+            <Loader />
         );
     }
 
