@@ -3,8 +3,6 @@
 import {
     Phone,
     Video,
-    Info,
-    Plus,
     Smile,
     Image as ImageIcon,
     Send,
@@ -28,6 +26,7 @@ import { addMessage, setMessages, setLastReadAt, prependMessages, updateMessageS
 import { selectMessagesForConversation } from '@/store/features/chat/chatSelectors';
 import { markConversationMessagesRead } from '@/store/features/notificationSlice';
 import { chatConfig } from '@/config/chatConfig';
+import { toast } from 'react-toastify';
 
 import { uploadImage } from '@/services/uploadService';
 import EmojiPicker from 'emoji-picker-react';
@@ -434,7 +433,7 @@ export const ChatWindow = () => {
 
 
     return (
-        <div className="flex-1 flex flex-col h-full bg-white relative">
+        <div className="flex-1 flex flex-col bg-white relative overflow-x-hidden">
             {/* <div className='text-black'>
                 conversation {selectedConversationId}
             </div> */}
@@ -478,9 +477,18 @@ export const ChatWindow = () => {
                 </div>
 
                 <div className="flex items-center gap-5 text-gray-400">
-                    <button className="hover:text-gray-600 transition-colors"><Phone className="h-4.5 w-4.5" /></button>
-                    <button className="hover:text-gray-600 transition-colors"><Video className="h-5 w-5" /></button>
-                    <button className="hover:text-gray-600 transition-colors"><Info className="h-5 w-5" /></button>
+                    <button 
+                        onClick={() => toast.info("Voice calling is coming soon!")}
+                        className="hover:text-gray-600 transition-colors"
+                    >
+                        <Phone className="h-4.5 w-4.5" />
+                    </button>
+                    <button 
+                        onClick={() => toast.info("Video calling is coming soon!")}
+                        className="hover:text-gray-600 transition-colors"
+                    >
+                        <Video className="h-5 w-5" />
+                    </button>
                 </div>
             </div>
 
@@ -651,7 +659,7 @@ export const ChatWindow = () => {
             )}
 
             {/* Input */}
-            <div className="relative p-4 pt-0 shrink-0 bg-white sticky bottom-0 z-30">
+            <div className="relative px-4 py-2 shrink-0 bg-white sticky bottom-0 z-30">
             {/* Added bg-white and sticky bottom to ensure it stays fixed if the parent height is weird */}
                 {/* Emoji Picker Popover */}
                 {showEmoji && (
@@ -665,10 +673,6 @@ export const ChatWindow = () => {
                 )}
 
                 <div className="flex items-center gap-2">
-                    <button className="h-9 w-9 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
-                        <Plus className="h-5 w-5 stroke-[2.5]" />
-                    </button>
-
                     <div className="flex-1 h-[44px] bg-gray-50 rounded-lg flex items-center px-4 gap-2 border border-transparent focus-within:border-gray-200 focus-within:bg-white transition-all">
                         <input
                             onKeyDown={(e) => {
