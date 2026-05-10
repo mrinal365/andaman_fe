@@ -49,8 +49,8 @@ export async function middleware(request: NextRequest) {
     } catch (error) {
         // API Check failed, redirect to login
         const response = NextResponse.redirect(new URL('/login?error=session_expired', request.url));
-        // Optional: Clear invalid cookie
-        response.cookies.delete('token');
+        // Clear invalid cookie using the correct key
+        response.cookies.delete(TOKEN_KEY);
         return response;
     }
 }

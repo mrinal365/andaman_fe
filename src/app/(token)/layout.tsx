@@ -31,7 +31,8 @@ export default function TokenLayout({
                 dispatch(updateUserInfo(userData));
             })
             .catch((err) => {
-                console.log(err)
+                console.error('Session validation failed:', err);
+                logout(); // Automatically clear local session and redirect
             })
             .finally(() => {
                 setIsLoading(false);
