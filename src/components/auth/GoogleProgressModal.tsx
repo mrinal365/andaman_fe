@@ -66,7 +66,7 @@ export const GoogleProgressModal: React.FC<GoogleProgressModalProps> = ({ isOpen
                 <div className="relative z-10">
                     <div className="text-center mb-8">
                         <h2 className="text-2xl font-bold text-white mb-2">Setting up your account</h2>
-                        <p className="text-neutral-400 text-sm">Please wait while we ride the wave to your new home</p>
+                        <p className="text-neutral-400 text-sm">Please wait while we prepare your journey</p>
                     </div>
 
                     <div className="space-y-6">

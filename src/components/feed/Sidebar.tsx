@@ -71,10 +71,10 @@ export const Sidebar = () => {
         <aside className="sticky top-0 h-screen w-[260px] flex flex-col gap-6 overflow-y-auto no-scrollbar py-6">
             {/* Brand */}
             <div className="flex items-center gap-3 px-4 mb-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
-                    <Waves className="h-6 w-6 fill-current" />
+                <div className="flex h-12 w-12 items-center justify-center">
+                    <img src="/logo.png" alt="Explore.baby" className="h-full w-full object-contain" />
                 </div>
-                <span className="text-xl font-bold tracking-tight text-gray-900">Andaman</span>
+                <span className="text-xl font-bold tracking-tight text-gray-900">Explore.baby</span>
             </div>
 
             {/* Navigation */}

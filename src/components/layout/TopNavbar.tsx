@@ -34,10 +34,10 @@ export const TopNavbar = () => {
             {/* Left: Branding */}
             <div className="flex items-center gap-3">
                 <Link href="/feed" className="flex items-center gap-2 group">
-                    <div className="h-8 w-8 bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded-full flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <Waves className="h-5 w-5 fill-current" />
+                    <div className="h-9 w-9 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <img src="/logo.png" alt="Explore.baby" className="h-full w-full object-contain" />
                     </div>
-                    <span className="font-bold text-gray-900 tracking-tight hidden md:block">Andaman</span>
+                    <span className="font-bold text-gray-900 tracking-tight hidden md:block">Explore.baby</span>
                 </Link>
             </div>
 

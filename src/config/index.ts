@@ -20,7 +20,7 @@ const commonDefaults = {
         timeout: 10000,
     },
     app: {
-        name: 'Andaman',
+        name: 'Explore.baby',
         version: '1.0.0',
     },
     chat: chatConfig,

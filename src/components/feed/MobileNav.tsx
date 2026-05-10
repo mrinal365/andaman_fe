@@ -16,30 +16,30 @@ export const MobileTopNav = () => {
 
     return (
         <nav className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white/80 backdrop-blur-md border-b border-gray-100 z-50 flex items-center justify-between px-4">
-            {/* Left: Profile */}
-            <Link href={user?.handle ? `/u/${user.handle}` : '/login'} className="flex items-center gap-3 active:opacity-70 transition-opacity">
-                <Avatar src={user?.avatar} name={user?.name} size="sm" />
-                <div className="flex flex-col">
-                    <div className="flex items-center gap-1">
-                        <span className="text-sm font-black text-gray-900 leading-none">{user?.name || 'Guest'}</span>
-                        {user?.verified && (
-                            <BadgeCheck className="h-[14px] w-[14px] text-[var(--color-primary)] fill-[var(--color-primary)]/10" />
-                        )}
-                    </div>
-                    <span className="text-[11px] text-gray-500 font-bold leading-none mt-0.5">@{user?.handle || 'guest'}</span>
-                </div>
-            </Link>
-
-            {/* Right: Notifications & Messages */}
+            {/* Left: Logo & Profile */}
             <div className="flex items-center gap-3">
-                <Link href="/notifications" className="text-gray-900 relative p-1">
-                    <Bell className="h-6 w-6 stroke-[2]" />
-                    {unreadCount > 0 && (
-                        <span className="absolute top-0 right-0 h-4 min-w-[16px] px-1 flex items-center justify-center bg-red-500 text-white text-[9px] font-black rounded-full border border-white">
-                            {unreadCount > 50 ? '50+' : unreadCount}
-                        </span>
-                    )}
+                <Link href="/feed" className="flex items-center shrink-0">
+                    <img src="/logo.png" alt="Explore.baby" className="h-8 w-8 object-contain" />
                 </Link>
+                
+                <div className="h-4 w-[1px] bg-gray-200 mx-1" />
+
+                <Link href={user?.handle ? `/u/${user.handle}` : '/login'} className="flex items-center gap-2 active:opacity-70 transition-opacity">
+                    <Avatar src={user?.avatar} name={user?.name} size="xs" />
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-1">
+                            <span className="text-[13px] font-black text-gray-900 leading-none">{user?.name || 'Guest'}</span>
+                            {user?.verified && (
+                                <BadgeCheck className="h-[12px] w-[12px] text-[var(--color-primary)] fill-[var(--color-primary)]/10" />
+                            )}
+                        </div>
+                        <span className="text-[10px] text-gray-500 font-bold leading-none mt-0.5">@{user?.handle || 'guest'}</span>
+                    </div>
+                </Link>
+            </div>
+
+            {/* Right: Messages (Notification removed as requested) */}
+            <div className="flex items-center gap-3">
                 <Link href="/messages" className="text-gray-900 relative p-1">
                     <MessageSquare className="h-6 w-6 stroke-[2]" />
                     {unreadMessages > 0 && (

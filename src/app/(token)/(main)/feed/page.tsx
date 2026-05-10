@@ -112,14 +112,14 @@ export default function FeedPage() {
     };
 
     return (
-        <main 
+        <main
             ref={scrollRef}
             onScroll={handleScroll}
-            className="flex-1 flex flex-col gap-4 max-w-[740px] mx-auto w-full pt-14 md:pt-4 pb-20 h-full overflow-y-auto no-scrollbar px-3 md:px-0 relative"
+            className="flex-1 flex flex-col gap-2 max-w-[740px] mx-auto w-full pt-14 md:pt-4 pb-20 h-full overflow-y-auto no-scrollbar px-3 md:px-0 relative"
         >
             <StoryReel />
 
-            <div className="flex flex-col gap-4 pb-10">
+            <div className="flex flex-col gap-4 pb-4">
                 {posts.map((post) => (
                     <FeedPost key={post.id} post={post} />
                 ))}

@@ -15,14 +15,14 @@ export const StoryReel = () => {
     const user = useAppSelector((state) => state.user.user);
     const scrollRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    
+
     const [groups, setGroups] = useState<StoryGroup[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
-    
+
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(true);
-    
+
     const [viewerState, setViewerState] = useState<{ isOpen: boolean; groupIndex: number }>({
         isOpen: false,
         groupIndex: 0
@@ -61,9 +61,9 @@ export const StoryReel = () => {
     const scroll = (direction: 'left' | 'right') => {
         if (scrollRef.current) {
             const scrollAmount = 300;
-            scrollRef.current.scrollBy({ 
-                left: direction === 'left' ? -scrollAmount : scrollAmount, 
-                behavior: 'smooth' 
+            scrollRef.current.scrollBy({
+                left: direction === 'left' ? -scrollAmount : scrollAmount,
+                behavior: 'smooth'
             });
         }
     };
@@ -95,7 +95,7 @@ export const StoryReel = () => {
     const handleStoryViewed = (storyId: string) => {
         // Optimistically update local state to reflect seen story
         setGroups(prev => prev.map(group => {
-            const updatedStories = group.stories.map(s => 
+            const updatedStories = group.stories.map(s =>
                 s._id === storyId ? { ...s, isSeen: true } : s
             );
             const stillHasUnseen = updatedStories.some(s => !s.isSeen);
@@ -112,8 +112,8 @@ export const StoryReel = () => {
             const updatedStories = group.stories.map(s => {
                 if (s._id === storyId) {
                     const willBeLiked = !s.isLiked;
-                    return { 
-                        ...s, 
+                    return {
+                        ...s,
                         isLiked: willBeLiked,
                         stats: {
                             ...s.stats,
@@ -132,7 +132,7 @@ export const StoryReel = () => {
     const otherGroups = groups.filter((_, i) => i !== userGroupIndex);
 
     return (
-        <div className="relative group/reel mb-4">
+        <div className="relative group/reel">
             {/* Scroll Buttons */}
             {canScrollLeft && (
                 <button
@@ -150,13 +150,13 @@ export const StoryReel = () => {
             >
                 {/* Create/View Own Story Button */}
                 <div className="flex flex-col items-center gap-2 shrink-0">
-                    <div 
+                    <div
                         className={cn(
                             "relative h-[66px] w-[66px] md:h-[72px] md:w-[72px] rounded-full flex items-center justify-center p-1 cursor-pointer transition-all group/add",
-                            userGroup?.hasUnseen 
-                                ? "ring-[2.5px] ring-black ring-offset-2" 
-                                : userGroup 
-                                    ? "border border-gray-200" 
+                            userGroup?.hasUnseen
+                                ? "ring-[2.5px] ring-black ring-offset-2"
+                                : userGroup
+                                    ? "border border-gray-200"
                                     : "border-[2.5px] border-dashed border-gray-300",
                             isUploading && "opacity-50 cursor-not-allowed"
                         )}
@@ -173,14 +173,14 @@ export const StoryReel = () => {
                             <Loader2 className="h-6 w-6 text-[var(--color-primary)] animate-spin" />
                         ) : (
                             <>
-                                <Avatar 
-                                    src={user?.avatar || ''} 
+                                <Avatar
+                                    src={user?.avatar || ''}
                                     className={cn(
                                         "h-full w-full rounded-full transition-all",
                                         !userGroup && "grayscale-[0.5] group-hover/add:grayscale-0"
-                                    )} 
+                                    )}
                                 />
-                                <div 
+                                <div
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         fileInputRef.current?.click();
@@ -191,12 +191,12 @@ export const StoryReel = () => {
                                 </div>
                             </>
                         )}
-                        <input 
-                            type="file" 
-                            ref={fileInputRef} 
-                            onChange={handleFileSelect} 
-                            accept="image/*" 
-                            className="hidden" 
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileSelect}
+                            accept="image/*"
+                            className="hidden"
                         />
                     </div>
                     <span className={cn(
@@ -211,15 +211,15 @@ export const StoryReel = () => {
                 {otherGroups.map((group) => {
                     const originalIndex = groups.findIndex(g => g.author._id === group.author._id);
                     return (
-                        <div 
-                            key={group.author._id} 
+                        <div
+                            key={group.author._id}
                             onClick={() => openViewer(originalIndex)}
                             className="flex flex-col items-center gap-2 cursor-pointer group/story shrink-0"
                         >
                             <div className={cn(
                                 "h-[66px] w-[66px] md:h-[72px] md:w-[72px] rounded-full flex items-center justify-center p-1.5 transition-all group-active/story:scale-95",
-                                group.hasUnseen 
-                                    ? "ring-[2.5px] ring-black ring-offset-2" 
+                                group.hasUnseen
+                                    ? "ring-[2.5px] ring-black ring-offset-2"
                                     : "border border-gray-100"
                             )}>
                                 <Avatar
@@ -256,7 +256,7 @@ export const StoryReel = () => {
             )}
 
             {viewerState.isOpen && (
-                <StoryViewer 
+                <StoryViewer
                     key={viewerSession}
                     isOpen={viewerState.isOpen}
                     groups={groups}

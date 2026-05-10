@@ -129,7 +129,7 @@ export const EditProfileModal = ({ isOpen, onClose, user }: EditProfileModalProp
                                 value={formData.location}
                                 onChange={handleChange}
                                 className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[var(--color-primary)] outline-none transition-all"
-                                placeholder="e.g. Port Blair, Andaman"
+                                placeholder="e.g. Bali, Indonesia"
                             />
                         </div>
                         <div>

@@ -98,12 +98,15 @@ export default function LoginPage() {
 
             <div className="w-full max-w-md relative z-10">
                 <div className="bg-neutral-900/30 backdrop-blur-xl border border-neutral-800/50 rounded-2xl p-8 shadow-2xl">
+                    <div className="flex justify-center mb-6">
+                        <img src="/logo.png" alt="Explore.baby" className="h-16 w-16 object-contain" />
+                    </div>
                     <div className="text-center mb-8">
                         <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-neutral-400">
                             Welcome Back
                         </h1>
                         <p className="text-neutral-400 mt-2 text-sm">
-                            Catch the wave to your account
+                            Your journey continues here
                         </p>
                     </div>
 
