@@ -2,14 +2,14 @@
 
 import Loader from "@/components/common/Loading";
 import { getCurrentUser } from "@/services/authService";
-import { updateUserInfo } from "@/store/features/userSlice";
+import { logout as logoutAction, updateUserInfo } from "@/store/features/userSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useEffect, useState } from "react";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { User } from "../../../types/user";
 import { RootState } from "@/store/store";
 import { AlertCircle, LogOut } from "lucide-react";
-import { logout } from "@/store/features/userSlice";
+import { useLogout } from "@/hooks/useLogout";
 
 export default function TokenLayout({
     children,
@@ -18,6 +18,7 @@ export default function TokenLayout({
 }) {
     const dispatch = useAppDispatch();
     const user = useAppSelector((state: RootState) => state.user.user);
+    const { logout } = useLogout();
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -57,11 +58,7 @@ export default function TokenLayout({
                         </p>
                     </div>
                     <button 
-                        onClick={() => {
-                            localStorage.removeItem('token');
-                            dispatch(logout());
-                            window.location.href = '/login';
-                        }}
+                        onClick={logout}
                         className="flex items-center gap-2 px-6 py-3 bg-black text-white rounded-xl font-bold hover:bg-neutral-800 transition-colors shadow-lg"
                     >
                         <LogOut size={18} />
