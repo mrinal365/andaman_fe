@@ -477,13 +477,13 @@ export const ChatWindow = () => {
                 </div>
 
                 <div className="flex items-center gap-5 text-gray-400">
-                    <button 
+                    <button
                         onClick={() => toast.info("Voice calling is coming soon!")}
                         className="hover:text-gray-600 transition-colors"
                     >
                         <Phone className="h-4.5 w-4.5" />
                     </button>
-                    <button 
+                    <button
                         onClick={() => toast.info("Video calling is coming soon!")}
                         className="hover:text-gray-600 transition-colors"
                     >
@@ -597,7 +597,7 @@ export const ChatWindow = () => {
                                                                 <div className="flex items-center gap-1.5 py-1 px-2 bg-red-500/20 rounded-md border border-red-500/30">
                                                                     <AlertCircle className="h-3 w-3 text-red-500" />
                                                                     <span className="text-[10px] font-bold text-red-100">Failed</span>
-                                                                    <button 
+                                                                    <button
                                                                         onClick={() => handleRetryMessage(msg)}
                                                                         className="text-[10px] font-black text-white hover:underline flex items-center gap-1"
                                                                     >
@@ -660,7 +660,7 @@ export const ChatWindow = () => {
 
             {/* Input */}
             <div className="relative px-4 py-2 shrink-0 bg-white z-30">
-            {/* Added bg-white and sticky bottom to ensure it stays fixed if the parent height is weird */}
+                {/* Added bg-white and sticky bottom to ensure it stays fixed if the parent height is weird */}
                 {/* Emoji Picker Popover */}
                 {showEmoji && (
                     <div className="absolute bottom-full mb-2 left-4 z-50 shadow-xl rounded-xl">

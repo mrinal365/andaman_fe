@@ -8,10 +8,20 @@ const Loader = (props: Props) => {
     const { text } = props
     return (
         <div>
-            <div className="flex h-screen w-screen items-center justify-center">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-black" />
-                    {text && <p className="text-sm text-gray-500">{text}…</p>}
+            <div className="flex h-screen w-screen items-center justify-center bg-white">
+                <div className="flex flex-col items-center gap-6">
+                    <div className="relative">
+                        <img 
+                            src="/logo.png" 
+                            alt="Logo" 
+                            className="w-20 h-20 object-contain animate-breathe"
+                        />
+                    </div>
+                    {text && (
+                        <p className="text-[14px] font-black text-gray-900 uppercase tracking-[0.2em] animate-pulse">
+                            {text}
+                        </p>
+                    )}
                 </div>
             </div>
         </div>

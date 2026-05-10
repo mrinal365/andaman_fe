@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronUp } from 'lucide-react';
 import { FeedPost } from '@/components/feed/FeedPost';
+import { PostSkeleton } from '@/components/feed/PostSkeleton';
 import { StoryReel } from '@/components/feed/StoryReel';
 import { getFeed } from '@/services/feedService';
 import { appendFeed } from '@/store/features/postSlice';
@@ -123,15 +124,17 @@ export default function FeedPage() {
                 {posts.map((post) => (
                     <FeedPost key={post.id} post={post} />
                 ))}
+
+                {meta.loading && (
+                    <>
+                        <PostSkeleton />
+                        <PostSkeleton />
+                        <PostSkeleton />
+                    </>
+                )}
             </div>
 
             <div ref={loaderRef} />
-
-            {meta.loading && (
-                <div className="py-4 flex justify-center">
-                    <div className="w-6 h-6 border-2 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
-                </div>
-            )}
 
             {!meta.hasMore && (
                 <div className="py-12 text-center">

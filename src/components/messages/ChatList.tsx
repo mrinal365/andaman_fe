@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Users, UserMinus, Loader2, MessageCircle } from 'lucide-react';
+import { Search, Users, UserMinus, MessageCircle } from 'lucide-react';
+import { ConversationSkeleton } from './ChatSkeletons';
 import { Avatar } from '@/components/common/Avatar';
 import { Conversation } from '../../../types/chat';
 import { cn } from '@/utils/cn';
@@ -95,10 +96,14 @@ export const ChatList = ({ isLoading }: ChatListProps) => {
             {/* List */}
             <div className="flex-1 overflow-y-auto no-scrollbar pt-2 px-2 pb-2 flex flex-col gap-0.5">
                 {isLoading ? (
-                    <div className="flex-1 flex flex-col items-center justify-center py-10 gap-3">
-                        <Loader2 className="w-8 h-8 animate-spin text-[var(--color-primary)]" />
-                        <p className="text-xs font-medium text-gray-400">Loading conversations...</p>
-                    </div>
+                    <>
+                        <ConversationSkeleton />
+                        <ConversationSkeleton />
+                        <ConversationSkeleton />
+                        <ConversationSkeleton />
+                        <ConversationSkeleton />
+                        <ConversationSkeleton />
+                    </>
                 ) : conversations.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center py-10 px-6 text-center">
                         <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-3">
@@ -109,87 +114,87 @@ export const ChatList = ({ isLoading }: ChatListProps) => {
                     </div>
                 ) : (
                     conversations.map((conversation) => {
-                    const isActive = selectedId === conversation?.conversationId;
-                    const isOtherOnline = conversation?.type === 'direct' && onlineUsers.includes(conversation?.otherUserId);
+                        const isActive = selectedId === conversation?.conversationId;
+                        const isOtherOnline = conversation?.type === 'direct' && onlineUsers.includes(conversation?.otherUserId);
 
-                    return (
-                        <div
-                            key={conversation.conversationId}
-                            onClick={() => {
-                                dispatch(setSelectedConversation(conversation?.conversationId as string));
-                                dispatch(resetUnread(conversation?.conversationId as string));
-                            }}
-                            className={cn(
-                                "flex items-start gap-3 p-2.5 rounded-lg cursor-pointer transition-colors group",
-                                isActive ? "bg-[#F8F9FA]" : "hover:bg-gray-50"
-                            )}
-                        >
-                            <div className="relative shrink-0">
-                                <Avatar
-                                    src={conversation?.avatar}
-                                    name={conversation?.name}
-                                    handle={conversation?.handle}
-                                    size="md"
-                                />
-                                {isOtherOnline && (
-                                    <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-[2px] border-white shadow-sm"></span>
+                        return (
+                            <div
+                                key={conversation.conversationId}
+                                onClick={() => {
+                                    dispatch(setSelectedConversation(conversation?.conversationId as string));
+                                    dispatch(resetUnread(conversation?.conversationId as string));
+                                }}
+                                className={cn(
+                                    "flex items-start gap-3 p-2.5 rounded-lg cursor-pointer transition-colors group",
+                                    isActive ? "bg-[#F8F9FA]" : "hover:bg-gray-50"
                                 )}
+                            >
+                                <div className="relative shrink-0">
+                                    <Avatar
+                                        src={conversation?.avatar}
+                                        name={conversation?.name}
+                                        handle={conversation?.handle}
+                                        size="md"
+                                    />
+                                    {isOtherOnline && (
+                                        <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-[2px] border-white shadow-sm"></span>
+                                    )}
 
-                                {conversation?.type === "group" && (
-                                    <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-lg bg-gray-100 border border-white flex items-center justify-center">
-                                        <Users className="h-2.5 w-2.5 text-gray-500" />
-                                    </span>
-                                )}
+                                    {conversation?.type === "group" && (
+                                        <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-lg bg-gray-100 border border-white flex items-center justify-center">
+                                            <Users className="h-2.5 w-2.5 text-gray-500" />
+                                        </span>
+                                    )}
 
-                            </div>
+                                </div>
 
-                            <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-1.5 min-w-0 flex-1 mr-2">
-                                        <h3 className={cn("text-[14px] font-bold leading-tight truncate", isActive ? "text-gray-900" : "text-gray-700")}>
-                                            {conversation.name}
-                                        </h3>
-                                        {conversation.type === "group" ? (
-                                            conversation?.participants?.length && (
-                                                <span className="bg-gray-100 text-gray-500 text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0 flex items-center gap-1">
-                                                    <Users className="h-3 w-3" />
-                                                    {conversation?.participants?.length}
-                                                </span>
-                                            )
+                                <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-1.5 min-w-0 flex-1 mr-2">
+                                            <h3 className={cn("text-[14px] font-bold leading-tight truncate", isActive ? "text-gray-900" : "text-gray-700")}>
+                                                {conversation.name}
+                                            </h3>
+                                            {conversation.type === "group" ? (
+                                                conversation?.participants?.length && (
+                                                    <span className="bg-gray-100 text-gray-500 text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0 flex items-center gap-1">
+                                                        <Users className="h-3 w-3" />
+                                                        {conversation?.participants?.length}
+                                                    </span>
+                                                )
+                                            ) : (
+                                                !conversation.isFollower && (
+                                                    <span className="bg-amber-50 text-amber-600 text-[9px] px-1.5 py-0.5 rounded-md font-bold shrink-0 flex items-center gap-1 border border-amber-100/50">
+                                                        <UserMinus className="h-2.5 w-2.5" />
+                                                        NOT FOLLOWER
+                                                    </span>
+                                                )
+                                            )}
+                                        </div>
+                                        {conversation?.lastMessageTime === 'Now' ? (
+                                            <span className="text-[10px] font-bold text-[var(--color-primary)] shrink-0">Now</span>
                                         ) : (
-                                            !conversation.isFollower && (
-                                                <span className="bg-amber-50 text-amber-600 text-[9px] px-1.5 py-0.5 rounded-md font-bold shrink-0 flex items-center gap-1 border border-amber-100/50">
-                                                    <UserMinus className="h-2.5 w-2.5" />
-                                                    NOT FOLLOWER
-                                                </span>
-                                            )
+                                            <span className="text-[10px] font-medium text-gray-400 shrink-0">
+                                                {formatLastMessageTime(conversation?.lastMessageAt || conversation?.lastMessageTime || conversation?.createdAt)}
+                                            </span>
                                         )}
                                     </div>
-                                    {conversation?.lastMessageTime === 'Now' ? (
-                                        <span className="text-[10px] font-bold text-[var(--color-primary)] shrink-0">Now</span>
-                                    ) : (
-                                        <span className="text-[10px] font-medium text-gray-400 shrink-0">
-                                            {formatLastMessageTime(conversation?.lastMessageAt || conversation?.lastMessageTime || conversation?.createdAt)}
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="flex items-center justify-between gap-2">
-                                    <p className={cn(
-                                        "text-[12px] truncate leading-snug",
-                                        conversation?.isTyping ? "text-green-500 font-bold" : (conversation?.unreadCount > 0 ? "text-gray-900 font-bold" : "text-gray-500 font-medium")
-                                    )}>
-                                        {conversation?.isTyping ? "typing..." : (conversation?.lastMessage || "click to start chat")}
-                                    </p>
-                                    {conversation?.unreadCount > 0 && (
-                                        <span className="h-4 min-w-[16px] px-1 flex items-center justify-center rounded-full bg-[var(--color-primary)] text-white text-[9px] font-bold shrink-0">
-                                            {conversation?.unreadCount}
-                                        </span>
-                                    )}
+                                    <div className="flex items-center justify-between gap-2">
+                                        <p className={cn(
+                                            "text-[12px] truncate leading-snug",
+                                            conversation?.isTyping ? "text-green-500 font-bold" : (conversation?.unreadCount > 0 ? "text-gray-900 font-bold" : "text-gray-500 font-medium")
+                                        )}>
+                                            {conversation?.isTyping ? "typing..." : (conversation?.lastMessage || "click to start chat")}
+                                        </p>
+                                        {conversation?.unreadCount > 0 && (
+                                            <span className="h-4 min-w-[16px] px-1 flex items-center justify-center rounded-full bg-[var(--color-primary)] text-white text-[9px] font-bold shrink-0">
+                                                {conversation?.unreadCount}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    );
-                }))}
+                        );
+                    }))}
 
                 {/* End of Chats Marker */}
                 {/* {filteredConversations.length >= 5 && (
