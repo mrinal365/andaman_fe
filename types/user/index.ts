@@ -23,6 +23,7 @@ export interface User {
 
     isOnline: boolean;
     verified: boolean;
+    blockedByAdmin?: boolean;
     role: "user" | "admin"; // extend if needed
 
     lastSeen: string;   // could be Date if you parse it
