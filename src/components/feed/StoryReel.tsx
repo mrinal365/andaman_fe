@@ -69,17 +69,31 @@ export const StoryReel = () => {
     };
 
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
 
+        const filesToUpload = Array.from(files).slice(0, 5);
         setIsUploading(true);
+        
         try {
-            const uploadRes = await uploadImage(file);
-            await createStory(uploadRes.url);
-            toast.success('Story posted!');
-            fetchStories(); // Refresh reel
+            let successCount = 0;
+            for (const file of filesToUpload) {
+                try {
+                    const uploadRes = await uploadImage(file);
+                    await createStory(uploadRes.url);
+                    successCount++;
+                } catch (err) {
+                    console.error(`Failed to upload story for ${file.name}`, err);
+                    toast.error(`Failed to upload ${file.name}`);
+                }
+            }
+            
+            if (successCount > 0) {
+                toast.success(`${successCount} ${successCount === 1 ? 'story' : 'stories'} posted!`);
+                fetchStories(); // Refresh reel
+            }
         } catch (err: any) {
-            const msg = err.response?.data?.message || err.message || 'Failed to post story';
+            const msg = err.response?.data?.message || err.message || 'Failed to post stories';
             toast.error(msg);
         } finally {
             setIsUploading(false);
@@ -148,64 +162,60 @@ export const StoryReel = () => {
                 onScroll={checkScroll}
                 className="flex gap-4 overflow-x-auto no-scrollbar py-2 items-start pl-1 scroll-smooth"
             >
-                {/* Create/View Own Story Button */}
+                {/* Dedicated Add Story Button */}
                 <div className="flex flex-col items-center gap-2 shrink-0">
-                    <div
+                    <button
+                        onClick={() => !isUploading && fileInputRef.current?.click()}
+                        disabled={isUploading}
                         className={cn(
-                            "relative h-[66px] w-[66px] md:h-[72px] md:w-[72px] rounded-full flex items-center justify-center p-1 cursor-pointer transition-all group/add",
-                            userGroup?.hasUnseen
-                                ? "ring-[2.5px] ring-black ring-offset-2"
-                                : userGroup
-                                    ? "border border-gray-200"
-                                    : "border-[2.5px] border-dashed border-gray-300",
+                            "relative h-[66px] w-[66px] md:h-[72px] md:w-[72px] rounded-full flex items-center justify-center border-[2.5px] border-dashed border-gray-300 transition-all hover:border-black group/add",
                             isUploading && "opacity-50 cursor-not-allowed"
                         )}
-                        onClick={() => {
-                            if (isUploading) return;
-                            if (userGroup) {
-                                openViewer(userGroupIndex);
-                            } else {
-                                fileInputRef.current?.click();
-                            }
-                        }}
                     >
                         {isUploading ? (
-                            <Loader2 className="h-6 w-6 text-[var(--color-primary)] animate-spin" />
+                            <Loader2 className="h-6 w-6 text-black animate-spin" />
                         ) : (
-                            <>
-                                <Avatar
-                                    src={user?.avatar || ''}
-                                    className={cn(
-                                        "h-full w-full rounded-full transition-all",
-                                        !userGroup && "grayscale-[0.5] group-hover/add:grayscale-0"
-                                    )}
-                                />
-                                <div
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        fileInputRef.current?.click();
-                                    }}
-                                    className="absolute bottom-0 right-0 bg-black rounded-full p-1 border-[2.5px] border-white shadow-sm hover:scale-110 transition-transform z-20 cursor-pointer"
-                                >
-                                    <Plus className="h-3 w-3 text-white stroke-[4]" />
-                                </div>
-                            </>
+                            <Plus className="h-6 w-6 text-gray-400 group-hover/add:text-black transition-colors" />
                         )}
                         <input
                             type="file"
                             ref={fileInputRef}
                             onChange={handleFileSelect}
                             accept="image/*"
+                            multiple
                             className="hidden"
                         />
-                    </div>
-                    <span className={cn(
-                        "text-[11px] font-black uppercase tracking-wider",
-                        userGroup?.hasUnseen ? "text-black" : "text-gray-400"
-                    )}>
-                        You
+                    </button>
+                    <span className="text-[11px] font-black uppercase tracking-wider text-gray-400">
+                        Add
                     </span>
                 </div>
+
+                {/* Own Story Group (If exists) */}
+                {userGroup && (
+                    <div 
+                        onClick={() => openViewer(userGroupIndex)}
+                        className="flex flex-col items-center gap-2 cursor-pointer group/story shrink-0"
+                    >
+                        <div className={cn(
+                            "h-[66px] w-[66px] md:h-[72px] md:w-[72px] rounded-full flex items-center justify-center p-1.5 transition-all group-active/story:scale-95",
+                            userGroup.hasUnseen
+                                ? "ring-[2.5px] ring-black ring-offset-2"
+                                : "border border-gray-100"
+                        )}>
+                            <Avatar
+                                src={user?.avatar || ''}
+                                className="h-full w-full rounded-full"
+                            />
+                        </div>
+                        <span className={cn(
+                            "text-[12px] font-bold tracking-tight truncate max-w-[70px]",
+                            userGroup.hasUnseen ? "text-black" : "text-gray-400"
+                        )}>
+                            You
+                        </span>
+                    </div>
+                )}
 
                 {/* Other Story Groups */}
                 {otherGroups.map((group) => {

@@ -115,11 +115,29 @@ export const CreatePostModal = ({ isOpen, onClose }: CreatePostModalProps) => {
             closeModal();
         }).catch((error) => {
             console.error("Failed to submit post", error);
-            const message = error.response?.data?.message || error.message || "Failed to submit post";
-            toast.error(message);
+            const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || "Failed to submit post";
+            toast.error(errorMessage);
         }).finally(() => {
             setIsSubmitting(false);
         });
+    };
+
+    const isPostValid = () => {
+        if (isUploading || isSubmitting) return false;
+        
+        if (postType === 'update') {
+            return postText.trim().length > 0 || images.length > 0;
+        }
+        
+        if (postType === 'guide') {
+            return postTitle.trim().length >= 3 && postText.trim().length >= 50;
+        }
+        
+        if (postType === 'news') {
+            return postTitle.trim().length >= 3 && postText.trim().length >= 20;
+        }
+        
+        return false;
     };
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -355,12 +373,7 @@ export const CreatePostModal = ({ isOpen, onClose }: CreatePostModalProps) => {
                                 className="h-[36px] px-6 text-[13px]"
                                 onClick={() => handlePostSubmit(closeModal)}
                                 loading={isSubmitting}
-                                disabled={
-                                    isUploading ||
-                                    (postType === 'update' ? !postText.trim() && images.length === 0 :
-                                    postType === 'guide' ? postTitle.length < 3 || postText.length < 50 :
-                                    postTitle.length < 3 || postText.length < 20)
-                                }
+                                disabled={!isPostValid()}
                             >
                                 Post
                             </Button>

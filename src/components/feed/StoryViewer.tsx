@@ -23,6 +23,7 @@ export const StoryViewer = ({ groups, initialGroupIndex, isOpen, onClose, onView
     const [groupIndex, setGroupIndex] = useState(initialGroupIndex);
     const [storyIndex, setStoryIndex] = useState(0);
     const [progress, setProgress] = useState(0);
+    const [isHolding, setIsHolding] = useState(false);
     const [interactionsModal, setInteractionsModal] = useState<{ isOpen: boolean; type: 'likes' | 'views' }>({
         isOpen: false,
         type: 'likes'
@@ -40,6 +41,7 @@ export const StoryViewer = ({ groups, initialGroupIndex, isOpen, onClose, onView
             setGroupIndex(initialGroupIndex);
             setStoryIndex(0);
             setProgress(0);
+            setIsHolding(false);
         }
     }, [isOpen, initialGroupIndex]);
 
@@ -69,7 +71,7 @@ export const StoryViewer = ({ groups, initialGroupIndex, isOpen, onClose, onView
     }, [groupIndex, groups, storyIndex]);
 
     useEffect(() => {
-        if (!isOpen || !currentStory) return;
+        if (!isOpen || !currentStory || isHolding || interactionsModal.isOpen) return;
 
         // Auto-advance progress bar
         const duration = 5000;
@@ -97,7 +99,7 @@ export const StoryViewer = ({ groups, initialGroupIndex, isOpen, onClose, onView
         }
 
         return () => clearInterval(timer);
-    }, [currentStory?._id, isOpen, nextStory, onViewed]);
+    }, [currentStory?._id, isOpen, nextStory, onViewed, isHolding, interactionsModal.isOpen]);
 
     if (!isOpen || !currentStory) return null;
 
@@ -127,8 +129,26 @@ export const StoryViewer = ({ groups, initialGroupIndex, isOpen, onClose, onView
             </button>
 
             {/* Navigation controls */}
-            <div className="absolute inset-y-0 left-0 w-1/4 z-[105]" onClick={prevStory} />
-            <div className="absolute inset-y-0 right-0 w-1/4 z-[105]" onClick={nextStory} />
+            <div 
+                className="absolute inset-y-0 left-0 w-1/4 z-[105]" 
+                onPointerDown={() => setIsHolding(true)}
+                onPointerUp={(e) => { setIsHolding(false); prevStory(); }}
+                onPointerLeave={() => setIsHolding(false)}
+            />
+            <div 
+                className="absolute inset-y-0 right-0 w-1/4 z-[105]" 
+                onPointerDown={() => setIsHolding(true)}
+                onPointerUp={(e) => { setIsHolding(false); nextStory(); }}
+                onPointerLeave={() => setIsHolding(false)}
+            />
+            
+            {/* Center hold zone */}
+            <div 
+                className="absolute inset-0 z-[104]" 
+                onPointerDown={() => setIsHolding(true)}
+                onPointerUp={() => setIsHolding(false)}
+                onPointerLeave={() => setIsHolding(false)}
+            />
             
             {/* Nav Arrows (Desktop) */}
             <button 
