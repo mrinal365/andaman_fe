@@ -65,7 +65,7 @@ export const RightSidebar = () => {
                             <div className="flex flex-wrap gap-1.5 pt-1">
                                 {user?.tags && user.tags.length > 0 ? (
                                     user.tags.map((tag) => (
-                                        <span key={tag} className="text-[10px] font-black px-2 py-0.5 rounded-full border bg-gray-50 text-gray-900 border-gray-200 uppercase tracking-tighter">
+                                        <span key={tag} className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-gray-50 text-gray-900 border-gray-200 uppercase tracking-tighter">
                                             {tag}
                                         </span>
                                     ))

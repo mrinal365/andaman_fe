@@ -26,7 +26,7 @@ export const SubpageNavbar = () => {
                     <ArrowLeft className="h-5 w-5 text-gray-900" />
                 </button>
                 <div className="flex flex-col">
-                    <h1 className="text-[17px] font-black text-gray-900 leading-none capitalize">{pageTitle}</h1>
+                    <h1 className="text-[17px] font-bold text-gray-900 leading-none capitalize">{pageTitle}</h1>
                     <Link href="/feed" className="text-[11px] text-[var(--color-primary)] font-bold hover:underline">
                         Back to Feed
                     </Link>
@@ -36,7 +36,7 @@ export const SubpageNavbar = () => {
             {/* Right: User Details */}
             <Link href={user?.handle ? `/u/${user.handle}` : '/login'} className="flex items-center gap-3 active:opacity-70 transition-opacity">
                 <div className="flex flex-col items-end hidden md:flex">
-                    <span className="text-[13px] font-black text-gray-900 leading-none">{user?.name || 'Guest'}</span>
+                    <span className="text-[13px] font-bold text-gray-900 leading-none">{user?.name || 'Guest'}</span>
                     <span className="text-[11px] text-gray-400 font-bold leading-none mt-1">@{user?.handle || 'guest'}</span>
                 </div>
                 <Avatar src={user?.avatar} name={user?.name} size="sm" className="border border-gray-100 shadow-sm" />

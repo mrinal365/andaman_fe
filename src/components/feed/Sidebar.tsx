@@ -31,7 +31,7 @@ import { usePathname } from 'next/navigation';
 import { createPost } from '@/services/feedService';
 import { addPostOptimistic } from '@/store/features/postSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { getWeatherForLocation } from '@/services/weatherService';
+import { getWeatherForLocation, getLocations } from '@/services/weatherService';
 import { RootState } from '@/store/store';
 import { chatConfig } from '@/config/chatConfig';
 import { CreatePostModal } from '@/components/feed/CreatePostModal';
@@ -58,12 +58,24 @@ export const Sidebar = () => {
 
 
     useEffect(() => {
-        getWeatherForLocation("69e661e45acdd0d8c0787b50")
-            .then((res) => {
-                setWeather(res);
+        getLocations()
+            .then((locations) => {
+                if (locations && locations.length > 0) {
+                    const portBlair = locations.find((l: any) => l.name.toLowerCase().includes('port blair')) || locations[0];
+                    const locId = portBlair._id || portBlair.id;
+                    if (locId) {
+                        getWeatherForLocation(locId)
+                            .then((res) => {
+                                setWeather(res);
+                            })
+                            .catch((error) => {
+                                console.error("Failed to get weather", error);
+                            });
+                    }
+                }
             })
             .catch((error) => {
-                console.error("Failed to get weather", error);
+                console.error("Failed to get weather locations", error);
             });
     }, []);
 
@@ -74,7 +86,7 @@ export const Sidebar = () => {
                 <div className="flex h-9 w-9 items-center justify-center shrink-0">
                     <img src="/logo.png" alt="Explore.baby" className="h-full w-full object-contain" />
                 </div>
-                <span className="text-[17px] font-black tracking-tight text-gray-900 uppercase">Explore.baby</span>
+                <span className="text-[17px] font-bold tracking-tight text-gray-900 uppercase">Explore.baby</span>
             </Link>
 
             {/* Navigation */}
@@ -102,7 +114,7 @@ export const Sidebar = () => {
                                 </span>
                             )}
                             {(item as any).comingSoon && (
-                                <span className="flex h-4 px-1.5 items-center justify-center rounded-md bg-blue-500/10 text-[9px] font-black text-blue-500 uppercase tracking-tighter border border-blue-500/20">
+                                <span className="flex h-4 px-1.5 items-center justify-center rounded-md bg-blue-500/10 text-[9px] font-bold text-blue-500 uppercase tracking-tighter border border-blue-500/20">
                                     Soon
                                 </span>
                             )}

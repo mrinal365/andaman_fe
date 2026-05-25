@@ -82,9 +82,12 @@ export const StoryReel = () => {
                     const uploadRes = await uploadImage(file);
                     await createStory(uploadRes.url);
                     successCount++;
-                } catch (err) {
+                } catch (err: any) {
                     console.error(`Failed to upload story for ${file.name}`, err);
-                    toast.error(`Failed to upload ${file.name}`);
+                    const errorMsg = err.response?.data?.message || err.message || `Failed to upload ${file.name}`;
+                    toast.error(errorMsg);
+                    // If we hit a limit, we should stop trying to upload the rest of the batch
+                    if (errorMsg.includes('limit')) break;
                 }
             }
             

@@ -52,14 +52,14 @@ export const Modal: React.FC<ModalProps> = ({
     if (!isOpen || !mounted) return null;
 
     const sizeClasses = {
-        sm: 'max-w-sm w-full h-auto max-h-[90vh]',
-        md: 'max-w-2xl w-full h-auto max-h-[90vh]',
-        lg: 'max-w-4xl w-full h-auto max-h-[90vh]',
-        full: 'w-[calc(100vw-80px)] h-[calc(100vh-80px)] max-w-none', // 40px padding on each side
+        sm: 'md:max-w-sm w-full h-auto md:max-h-[90vh]',
+        md: 'md:max-w-2xl w-full h-auto md:max-h-[90vh]',
+        lg: 'md:max-w-4xl w-full h-auto md:max-h-[90vh]',
+        full: 'md:w-[calc(100vw-80px)] md:h-[calc(100vh-80px)] md:max-w-none w-full h-[85vh]',
     };
 
     const modalContent = (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
@@ -70,18 +70,26 @@ export const Modal: React.FC<ModalProps> = ({
             {/* Modal Content */}
             <div
                 className={`
-                    relative bg-white rounded-2xl shadow-xl flex flex-col overflow-hidden
-                    transform transition-all duration-200 scale-100 opacity-100
+                    relative bg-white flex flex-col overflow-hidden shadow-2xl
+                    w-full max-h-[85vh] rounded-t-2xl
+                    md:rounded-2xl md:max-h-[90vh]
+                    transform transition-all duration-300
+                    animate-in slide-in-from-bottom duration-300 md:fade-in md:zoom-in-95 md:slide-in-from-bottom-0
                     ${sizeClasses[size]}
                     ${className}
                 `}
                 role="dialog"
                 aria-modal="true"
             >
+                {/* Drag handle — mobile only */}
+                <div className="md:hidden flex justify-center pt-3 pb-1 shrink-0">
+                    <div className="w-10 h-1 rounded-full bg-gray-300" />
+                </div>
+
                 {/* Header */}
                 {(title || !hideCloseButton) && (
                     <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
-                        <div className="text-lg font-semibold text-gray-900">
+                        <div className="text-lg font-bold text-gray-900">
                             {title}
                         </div>
                         {!hideCloseButton && (

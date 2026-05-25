@@ -17,7 +17,7 @@ import { INTERACTION_TYPE } from '@/constants';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { RootState } from '@/store/store';
 import { getTagStyles } from '@/utils';
-import { increaseCommentCount, toggleLikeOptimistic, toggleSavedOptimistic } from '@/store/features/postSlice';
+import { increaseCommentCount, toggleLikeOptimistic, toggleSavedOptimistic, upsertPost } from '@/store/features/postSlice';
 import { addCommentOptimistic, deleteComment, replaceComment, setComments } from '@/store/features/commentSlice';
 
 import { Avatar } from '@/components/common/Avatar';
@@ -70,6 +70,7 @@ export const PostDetailModal = ({ post: postProp, isOpen, onClose, scrollToComme
     // fetch comments + record view when opened
     useEffect(() => {
         if (isOpen && post?._id) {
+            dispatch(upsertPost(postProp));
             setIsLoadingComments(true);
             getComments(post._id)
                 .then((res) => {
@@ -81,7 +82,7 @@ export const PostDetailModal = ({ post: postProp, isOpen, onClose, scrollToComme
             // fire-and-forget view tracking
             recordView(post._id).catch(() => { });
         }
-    }, [isOpen, post?._id, dispatch]);
+    }, [isOpen, post?._id, postId, dispatch]);
 
     // scroll to comments section when opened via comment icon
     useEffect(() => {

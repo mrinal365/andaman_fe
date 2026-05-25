@@ -11,9 +11,10 @@ import { likeUnlikePost, savePost, recordView, deletePost } from '@/services/fee
 import { followUser, unfollowUser } from '@/services/userService';
 import { INTERACTION_TYPE } from '@/constants';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { RootState } from '@/store/store';
 import { getTagStyles } from '@/utils';
 import { cn } from '@/utils/cn';
-import { toggleLikeOptimistic, toggleSavedOptimistic, deletePostOptimistic } from '@/store/features/postSlice';
+import { toggleLikeOptimistic, toggleSavedOptimistic, deletePostOptimistic, upsertPost } from '@/store/features/postSlice';
 import { VideoPlayer } from './VideoPlayer';
 import { PostDetailModal } from './PostDetailModal';
 import { renderTextWithTags } from '@/utils/textParser';
@@ -25,10 +26,20 @@ import { LikesModal } from '@/components/common/LikesModal';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
 
-export const FeedPost = ({ post }: { post: Post }) => {
+export const FeedPost = ({ post: postProp }: { post: Post }) => {
+    const dispatch = useAppDispatch();
+    const postId = postProp.id || postProp._id;
+
+    // Load post from Redux store to be reactive to optimistic updates, falling back to prop
+    const post = useAppSelector((state: RootState) => state.posts.byId[postId]) || postProp;
+
+    // Upsert post to store on mount or when postId changes
+    useEffect(() => {
+        dispatch(upsertPost(postProp));
+    }, [dispatch, postId]);
+
     const postImages = post?.images?.length ? post.images : [];
 
-    const dispatch = useAppDispatch();
     const currentUser = useAppSelector(state => state.user.user);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [isLikesModalOpen, setIsLikesModalOpen] = useState(false);
@@ -44,9 +55,6 @@ export const FeedPost = ({ post }: { post: Post }) => {
     const authorId = post.authorId?._id || post.authorId;
     const isOwnPost = currentUser?.id === authorId;
     const authorHandle = post.authorId?.handle || (isOwnPost ? currentUser?.handle : '');
-
-
-    const postId = post.id;
 
     // View tracking refs
     const hasViewedRef = useRef(false);
@@ -358,7 +366,7 @@ export const FeedPost = ({ post }: { post: Post }) => {
 
                                                 {isTagHovered && (
                                                     <div className="absolute top-full left-0 mt-2 p-3 bg-white rounded-xl shadow-2xl border border-gray-100 z-[100] min-w-[180px] animate-in fade-in slide-in-from-top-2 duration-200 pointer-events-none">
-                                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tagged Users</p>
+                                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Tagged Users</p>
                                                         <div className="flex flex-col gap-2">
                                                             {post.taggedUsers.map((tu: any) => (
                                                                 <div key={tu._id} className="flex items-center gap-2">
@@ -435,7 +443,7 @@ export const FeedPost = ({ post }: { post: Post }) => {
                 {/* Text */}
                 <div className="px-4 pb-2">
                     {post?.feed?.title && (
-                        <p className="text-[15px] text-gray-900 leading-tight font-black mb-1">{post.feed.title}</p>
+                        <p className="text-[15px] text-gray-900 leading-tight font-bold mb-1">{post.feed.title}</p>
                     )}
                     <p className="text-[14px] text-gray-800 leading-relaxed font-normal whitespace-pre-wrap">
                         {renderTextWithTags(post?.feed?.previewText || '')}

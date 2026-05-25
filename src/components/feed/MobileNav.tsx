@@ -28,7 +28,7 @@ export const MobileTopNav = () => {
                     <Avatar src={user?.avatar} name={user?.name} size="xs" />
                     <div className="flex flex-col">
                         <div className="flex items-center gap-1">
-                            <span className="text-[13px] font-black text-gray-900 leading-none">{user?.name || 'Guest'}</span>
+                            <span className="text-[13px] font-bold text-gray-900 leading-none">{user?.name || 'Guest'}</span>
                             {user?.verified && (
                                 <BadgeCheck className="h-[12px] w-[12px] text-[var(--color-primary)] fill-[var(--color-primary)]/10" />
                             )}
@@ -39,11 +39,11 @@ export const MobileTopNav = () => {
             </div>
 
             {/* Right: Messages (Notification removed as requested) */}
-            <div className="flex items-center gap-3">
+             <div className="flex items-center gap-3">
                 <Link href="/messages" className="text-gray-900 relative p-1">
                     <MessageSquare className="h-6 w-6 stroke-[2]" />
                     {unreadMessages > 0 && (
-                        <span className="absolute top-0 right-0 h-4 min-w-[16px] px-1 flex items-center justify-center bg-red-500 text-white text-[9px] font-black rounded-full border border-white">
+                        <span className="absolute top-0 right-0 h-4 min-w-[16px] px-1 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full border border-white">
                             {unreadMessages > 50 ? '50+' : unreadMessages}
                         </span>
                     )}
@@ -94,7 +94,7 @@ export const MobileBottomNav = () => {
                                             className={`h-6 w-6 transition-all ${isActive ? 'stroke-[2.5px] fill-current scale-105' : 'stroke-[2px]'}`} 
                                         />
                                         {(item as any).badge > 0 && (
-                                            <span className="absolute -top-1.5 -right-1.5 h-4 min-w-[16px] px-1 flex items-center justify-center bg-red-500 text-white text-[8px] font-black rounded-full border border-white">
+                                            <span className="absolute -top-1.5 -right-1.5 h-4 min-w-[16px] px-1 flex items-center justify-center bg-red-500 text-white text-[8px] font-bold rounded-full border border-white">
                                                 {(item as any).badge > 50 ? '50+' : (item as any).badge}
                                             </span>
                                         )}
