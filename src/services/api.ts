@@ -39,10 +39,30 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        // Handle global errors (e.g., 401 Unauthorized)
-        if (error.response && error.response.status === 401) {
-            // Unauthorized - could be session expired or wrong credentials.
-            // Specific services will handle their own toasts if needed.
+        if (error.response) {
+            const { status, data } = error.response;
+
+            switch (status) {
+                case 401:
+                    // Unauthorized - could be session expired or wrong credentials.
+                    // Specific services will handle their own toasts if needed.
+                    break;
+                case 429:
+                    // Rate limited — show a clear message with retry info
+                    {
+                        const retryAfter = data?.retryAfter;
+                        const minutes = retryAfter ? Math.ceil(retryAfter / 60) : null;
+                        const timeMsg = minutes ? ` Try again in ${minutes} minute${minutes > 1 ? 's' : ''}.` : '';
+                        toast.error(`Too many requests.${timeMsg}`, {
+                            toastId: 'rate-limit-toast', // Prevent duplicate toasts
+                            autoClose: 8000,
+                        });
+                    }
+                    break;
+                case 400:
+                    // Bad request — validation error; let individual handlers show specific messages
+                    break;
+            }
         }
         return Promise.reject(error);
     }

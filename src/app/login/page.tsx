@@ -1,8 +1,8 @@
 'use client'
 import Link from 'next/link';
-import { useState, useEffect } from 'react'; // Added useEffect
-import { useRouter, useSearchParams } from 'next/navigation'; // Added useSearchParams
-import { toast } from 'react-toastify'; // Added toast
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'react-toastify';
 
 import { AuthBackground } from '@/components/login/AuthBackground';
 import { Input } from '@/components/common/Input';
@@ -15,6 +15,7 @@ import { setCookie, getCookie } from '@/utils';
 import { TOKEN_KEY } from '@/constants';
 import { useGoogleLogin } from '@react-oauth/google';
 import { GoogleProgressModal } from '@/components/auth/GoogleProgressModal';
+import { loginRateLimiter } from '@/utils/rateLimiter';
 
 export default function LoginPage() {
     const router = useRouter()
@@ -42,6 +43,45 @@ export default function LoginPage() {
     const [showProgressModal, setShowProgressModal] = useState(false);
     const [pendingAuthResponse, setPendingAuthResponse] = useState<any>(null);
 
+    // Login attempt tracking
+    const [isRateLimited, setIsRateLimited] = useState(false);
+    const [rateLimitCountdown, setRateLimitCountdown] = useState(0);
+
+    // Check rate limit on mount
+    useEffect(() => {
+        const result = loginRateLimiter.check();
+        if (!result.allowed) {
+            setIsRateLimited(true);
+            setRateLimitCountdown(Math.ceil(result.retryAfterMs / 1000));
+        }
+    }, []);
+
+    // Countdown timer
+    useEffect(() => {
+        if (!isRateLimited || rateLimitCountdown <= 0) return;
+
+        const timer = setInterval(() => {
+            setRateLimitCountdown(prev => {
+                if (prev <= 1) {
+                    setIsRateLimited(false);
+                    clearInterval(timer);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [isRateLimited, rateLimitCountdown]);
+
+    const formatCountdown = useCallback((seconds: number): string => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        if (mins > 0) {
+            return `${mins}m ${secs}s`;
+        }
+        return `${secs}s`;
+    }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -49,23 +89,47 @@ export default function LoginPage() {
     };
 
     const handleSubmit = (e: React.FormEvent) => {
-        // if (!isFormDataValid(formData)) {
-        //     return
-        // }
-        setIsLoggingLoading(true)
+        e.preventDefault();
+
+        // Check rate limit before attempting login
+        const rateLimitResult = loginRateLimiter.check();
+        if (!rateLimitResult.allowed) {
+            setIsRateLimited(true);
+            setRateLimitCountdown(Math.ceil(rateLimitResult.retryAfterMs / 1000));
+            toast.error('Too many login attempts. Please wait before trying again.');
+            return;
+        }
+
+        setIsLoggingLoading(true);
         login(formData).then((res) => {
             toast.success("Login Successful");
             setCookie(TOKEN_KEY, res?.token);
             router.push("/feed");
         }).catch((err) => {
+            // Record failed login attempt for rate limiting
+            loginRateLimiter.record();
+
+            const status = err.response?.status;
             const message = err.response?.data?.message || "Invalid email or password";
-            toast.error(message);
+
+            if (status === 429) {
+                const retryAfter = err.response?.data?.retryAfter;
+                setIsRateLimited(true);
+                setRateLimitCountdown(retryAfter || 1800);
+                toast.error(message);
+            } else {
+                toast.error(message);
+            }
+
+            // Check if we've just hit the limit after this failure
+            const checkAfter = loginRateLimiter.check();
+            if (!checkAfter.allowed) {
+                setIsRateLimited(true);
+                setRateLimitCountdown(Math.ceil(checkAfter.retryAfterMs / 1000));
+            }
         }).finally(() => {
-            setIsLoggingLoading(false)
-        })
-        e.preventDefault();
-        console.log('Login Data:', formData);
-        // Add auth logic here
+            setIsLoggingLoading(false);
+        });
     };
 
     const handleGoogleLoginSuccess = async (tokenResponse: any) => {
@@ -117,6 +181,21 @@ export default function LoginPage() {
                         </p>
                     </div>
 
+                    {/* Rate Limit Warning Banner */}
+                    {isRateLimited && (
+                        <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-center">
+                            <div className="flex items-center justify-center gap-2 mb-1">
+                                <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                                <span className="text-red-400 font-medium text-sm">Too many attempts</span>
+                            </div>
+                            <p className="text-red-300/70 text-xs">
+                                Please try again in <span className="font-mono font-bold text-red-300">{formatCountdown(rateLimitCountdown)}</span>
+                            </p>
+                        </div>
+                    )}
+
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <Input
                             label="Email Address"
@@ -150,8 +229,13 @@ export default function LoginPage() {
                             />
                         </div>
 
-                        <Button loading={isLoggingLoading} type="submit" variant="primary">
-                            Sign In
+                        <Button
+                            loading={isLoggingLoading}
+                            type="submit"
+                            variant="primary"
+                            disabled={isRateLimited}
+                        >
+                            {isRateLimited ? `Try again in ${formatCountdown(rateLimitCountdown)}` : 'Sign In'}
                         </Button>
 
                         <div className="relative my-6">
