@@ -1,6 +1,7 @@
 import { Sidebar } from '@/components/feed/Sidebar';
 import { RightSidebar } from '@/components/feed/RightSidebar';
 import { MobileTopNav, MobileBottomNav } from '@/components/feed/MobileNav';
+import { InstallPrompt } from '@/components/pwa/InstallPrompt';
 
 export default function AuthLayout({
     children,
@@ -29,6 +30,8 @@ export default function AuthLayout({
             </div>
 
             <MobileBottomNav />
+            <InstallPrompt />
         </div>
     );
 }
+

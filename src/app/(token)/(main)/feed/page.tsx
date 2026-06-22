@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ChevronUp } from 'lucide-react';
+import { ChevronUp, WifiOff } from 'lucide-react';
 import { FeedPost } from '@/components/feed/FeedPost';
 import { PostSkeleton } from '@/components/feed/PostSkeleton';
 import { StoryReel } from '@/components/feed/StoryReel';
@@ -10,6 +10,8 @@ import { appendFeed } from '@/store/features/postSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { RootState } from '@/store/store';
 import { cn } from '@/utils/cn';
+import { cacheFeedPosts, getCachedFeedPosts } from '@/utils/offlineStorage';
+import { useOnlineStatus } from '@/components/pwa/OfflineBanner';
 
 interface FeedMeta {
     cursor: string | null;
@@ -76,6 +78,9 @@ export default function FeedPage() {
         metaRef.current = meta;
     }, [meta]);
 
+    const isOnline = useOnlineStatus();
+    const [isOfflineMode, setIsOfflineMode] = useState(false);
+
     const fetchFeed = useCallback(async () => {
         const { loading, hasMore, cursor } = metaRef.current;
         if (loading || !hasMore) return;
@@ -95,9 +100,27 @@ export default function FeedPage() {
                 hasMore: response.hasMore,
                 loading: false,
             });
+            setIsOfflineMode(false);
+
+            // Cache posts for offline access
+            cacheFeedPosts(posts).catch(() => {});
         } catch (error) {
             console.error(error);
             setMeta((prev) => ({ ...prev, loading: false }));
+
+            // If fetch failed and no posts loaded yet, try offline cache
+            if (metaRef.current.cursor === null) {
+                try {
+                    const cachedPosts = await getCachedFeedPosts();
+                    if (cachedPosts.length > 0) {
+                        dispatch(appendFeed({ posts: cachedPosts }));
+                        setIsOfflineMode(true);
+                        setMeta({ cursor: null, hasMore: false, loading: false });
+                    }
+                } catch {
+                    // IndexedDB not available, nothing to show
+                }
+            }
         }
     }, [dispatch]);
 
@@ -118,6 +141,19 @@ export default function FeedPage() {
             onScroll={handleScroll}
             className="flex-1 flex flex-col gap-0 max-w-[740px] mx-auto w-full pt-16 md:pt-4 pb-20 h-full overflow-y-auto no-scrollbar px-0 md:px-0 relative"
         >
+            {/* Offline Mode Banner */}
+            {isOfflineMode && (
+                <div className="mx-4 mt-2 mb-3 p-3 rounded-xl bg-amber-50 border border-amber-100 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                        <WifiOff size={16} className="text-amber-600" />
+                    </div>
+                    <div>
+                        <p className="text-xs font-bold text-amber-800">Offline — showing cached content</p>
+                        <p className="text-[10px] text-amber-600 mt-0.5">New posts will load when you&apos;re back online</p>
+                    </div>
+                </div>
+            )}
+
             <div className="px-4">
                 <StoryReel />
             </div>

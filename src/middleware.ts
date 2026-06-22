@@ -5,7 +5,7 @@ import { TOKEN_KEY } from './constants';
 import { getCookie } from './utils';
 
 // Define public paths that don't require authentication
-const publicPaths = ['/login', '/signup'];
+const publicPaths = ['/login', '/signup', '/offline'];
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
